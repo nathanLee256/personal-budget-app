@@ -1,0 +1,45 @@
+/* This file now simply imports a font and defines the global style of the html body.
+Everything else is formatted using styled components */
+
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap');
+
+
+body {
+  min-height: 100%; /* changing this from height: 100% to min-height: 100% keeps the footer 
+  at the bottom */
+  margin: 0;
+  
+  position: relative;
+  outline: 2px solid black; 
+  
+}
+
+html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
