@@ -115,7 +115,7 @@ npm start
 
 #### Categorising Transactions
 
-![ImportData Page Categorising Transactions](src/screenshots/import_data/categorise.png)
+
 
 ### Dashboard Example
 
