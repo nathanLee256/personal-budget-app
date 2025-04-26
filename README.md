@@ -1,3 +1,11 @@
+![License](https://img.shields.io/badge/license-MIT-green)
+![Last Commit](https://img.shields.io/github/last-commit/nathanLee256/personal-budget-app)
+![React](https://img.shields.io/badge/frontend-React-blue)
+![Express](https://img.shields.io/badge/backend-Express.js-lightgrey)
+![MySQL](https://img.shields.io/badge/database-MySQL-blue)
+![Python](https://img.shields.io/badge/data%20processing-Python3-yellow)
+
+
 # Personal Budgeting Web Application
 
 A full-stack web application for managing personal budgets.  
