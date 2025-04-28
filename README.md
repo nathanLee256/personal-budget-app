@@ -117,8 +117,6 @@ npm start
 
 ### Dashboard Example
 
-![Dashboard Page Example 1](src/screenshots/dashboard/dash.png)
-
 ![Dashboard Page Example 2](src/screenshots/dashboard/dashboard.png)
 
 
