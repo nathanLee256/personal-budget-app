@@ -77,6 +77,13 @@ npm start
 
 ## Screenshots
 
+### Home Page
+
+![Home Example 1](src/screenshots/home/home_1.png)
+
+![Home Example 2](src/screenshots/home/home_2.png)
+
+
 ### Login Example
 
 ![Login Example 1](src/screenshots/login/login.png)
