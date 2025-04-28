@@ -29,9 +29,10 @@ that is displayed in the Dashboard charts. */}
 
 export default function ImportCSV() {
   
+  
   //destructure the data global state variable
   const { userData, setUserData } = useAuth();
-  const { selectedMonth, setSelectedMonth } = useAuth(); 
+  const [selectedMonth, setSelectedMonth ] = useState(""); 
   
   const [selectedYear, setSelectedYear] = useState("");
   const [file, setFile] = useState(null);
@@ -90,7 +91,10 @@ export default function ImportCSV() {
   if (userData){
     return(
       <DashWrapper>
-        <Dashboard/>
+        <Dashboard
+          selectedMonth={selectedMonth}
+          setSelectedMonth={setSelectedMonth}
+        />
         <MyAppFooter></MyAppFooter>
       </DashWrapper>
 

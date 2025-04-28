@@ -91,7 +91,7 @@ npm start
 
 #### Saving Data
 
-
+![Worksheet Page Saving Data 1](src/screenshots/worksheet/save_1.png)
 
 ### Import Data Example
 
@@ -112,7 +112,9 @@ npm start
 
 ### Dashboard Example
 
-![Dashboard Page Example](src/screenshots/dashboard/dash.png)
+![Dashboard Page Example 1](src/screenshots/dashboard/dash.png)
+
+![Dashboard Page Example 2](src/screenshots/dashboard/dashboard.png)
 
 
 ## Why This App is Unique

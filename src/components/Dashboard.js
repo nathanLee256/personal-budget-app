@@ -18,10 +18,10 @@ graphical charts to the user which summarise their monthly budget. The charts ar
 in grid/flexbox, presenting a 'budget dashboard' to the user. The notation in <ImportCSV/>
 used to pass the object is <Dashboard data= {result} />*/
 
-export default function Dashboard(){
+export default function Dashboard({selectedMonth, setSelectedMonth}){
+  
   //destructure the data global state variable
   const { userData, setUserData } = useAuth();
-  const { selectedMonth, setSelectedMonth } = useAuth();
 
 
 

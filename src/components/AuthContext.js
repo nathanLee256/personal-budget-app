@@ -25,6 +25,7 @@ const AuthProvider = ({ children }) => {
   const [chooseRegister, setChooseRegister] = useState(false);
   const [transactions, setTransactions] = useState([]);     //array of data objects representing the user's transactions for a selected month
   const [userId, setUserId] = useState(null); // state to store user_id
+  const [userData, setUserData] = useState(null);
 
   /* budgetItems is a state object which is initialised with the user's current budget items and used to
   populate the dropdown menu in ImportData */
@@ -164,7 +165,8 @@ const AuthProvider = ({ children }) => {
     chooseLogin, setChooseLogin,
     chooseRegister, setChooseRegister,
     transactions, setTransactions,
-    budgetItems, setBudgetItems
+    budgetItems, setBudgetItems,
+    userData, setUserData
   };
 
 

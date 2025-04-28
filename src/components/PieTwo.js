@@ -10,7 +10,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend,
 
 /* This component is called from within the <Dashboard/> component using <Table data={result} />
 It uses the result JSON object and displays the data for Income in a Pie ChartJS chart. */
-export default function PieOne(){
+export default function PieTwo(){
   
   //destructure the data global state variables
   const { userData, setUserData } = useAuth();
