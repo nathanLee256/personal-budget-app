@@ -79,15 +79,19 @@ npm start
 
 ### Login Example
 
+![Login Example 1](src/screenshots/login/login.png)
+
+![Login Example 2](src/screenshots/login/login_1.png)
 
 ### Worksheet Example
 
 #### Worksheet Landing Page
 
+![Worksheet Landing](src/screenshots/worksheet/landing.png)
 
 #### Entering Budget Items
 
-
+![Worksheet Landing](src/screenshots/worksheet/open_collapse.png)
 
 #### Saving Data
 
@@ -97,18 +101,19 @@ npm start
 
 #### Import Data Landing
 
+![ImportData Landing](src/screenshots/import_data/landing.png)
 
 #### Uploading .csv file
 
-!
+![ImportData Uploading CSV File](src/screenshots/import_data/upload.png)
 
 #### Submitting Upload
 
-
+![ImportData Submitting File](src/screenshots/import_data/submit.png)
 
 #### Categorising Transactions
 
-
+![ImportData Categorising Transactions](src/screenshots/import_data/categorise.png)
 
 ### Dashboard Example
 
