@@ -12,7 +12,7 @@ import weight_see_saw_1 from '../assets/weight_see_saw_1.jpg';
 import weight_loss_1 from '../assets/weight_loss_1.png';
 import weightLossFactors from '../assets/weightLossFactors.png';
 import csv from '../assets/CSV.jpg';
-import Tool from '../assets/tool.png';
+import dash from '../screenshots/dashboard/dashboard.png';
 import MyAppFooter from '../components/MyAppFooter.js';
 
 
@@ -86,7 +86,7 @@ export default function Home(props)
                             <li>Energy Intake</li>
                             <li>Energy Expenditure</li>
                         </LargeTextList>
-                        <Row style= {{outline: '2px solid blue'}}>
+                        <Row>
                             <Col sm="6">
                                 <CardImg src={weight_see_saw_1} alt="see-saw" />
                             </Col>
@@ -116,15 +116,15 @@ export default function Home(props)
                             are able to perform consistently, and enlisting the support of personal trainers or 
                             training partners to keep them accountable and motivated on their weight loss journey.        
                         </LargeText>
-                        <Row style= {{outline: '2px solid blue'}}>
-                            <Col sm="6" style= {{outline: '2px solid green'}}>
+                        <Row>
+                            <Col sm="6">
                                 <CardImg 
                                     src={weight_loss_1} 
                                     alt="see-saw"
                                     style={{ width: '100%', height: '100%', objectFit: 'contain'}}
                                 />
                             </Col>
-                            <Col sm="6" style= {{outline: '2px solid green'}}>
+                            <Col sm="6">
                                 <CardImg 
                                     src={weightLossFactors} 
                                     alt="see-saw" 
@@ -150,8 +150,8 @@ export default function Home(props)
                             creating additional income streams. To begin, click below to import your monthly bank 
                             statement .csv file, or go to the personal budget online calculator. 
                         </LargeText>
-                        <Row style= {{outline: '2px solid blue'}}>
-                            <Col sm="6" style= {{outline: '2px solid green'}}>
+                        <Row>
+                            <Col sm="6">
                                 <Card color='light' style={{  height: '500px' }}> {/* start card 1 */}
                                     <CardImg src={csv} alt="CSV Image" style={{  height: '350px' }}/>
                                     <CardBodyStyled>
@@ -170,9 +170,9 @@ export default function Home(props)
                                     </CardBodyStyled>
                                 </Card> {/* end card 1 */}
                             </Col>
-                            <Col sm="6" style= {{outline: '2px solid green'}}>
+                            <Col sm="6">
                                 <Card color='light' style={{  height: '500px' }}> {/* start card 1 */}
-                                    <CardImg src={Tool} alt="Tool Image" style={{  height: '350px' }}/>
+                                    <CardImg src={dash} alt="Tool Image" style={{  height: '350px' }}/>
                                     <CardBodyStyled>
                                         <h2>Budget Tool</h2>
                                     <CardSubtitle
@@ -204,7 +204,7 @@ const LargeText = styled.p`
   font-weight: normal; // Normal font weight
   color: #333; // Standard text color
   margin: 1rem 0; // Standard margin
-  outline: 2px solid purple;
+  
   
 `;
 /* formats the <ol> list */
@@ -237,7 +237,7 @@ const Wrapper = styled.div`
     display: flex;
     flex-direction: column;
     min-height: 100%;
-    outline: 2px solid black; 
+    
 `;
 
 const HomeContainer = styled.div`
@@ -245,7 +245,7 @@ const HomeContainer = styled.div`
     display: flex; /* Use flexbox to center the hero image vertically and horizontally */
     justify-content: center;
     align-items: center;
-    outline: 2px solid black;
+    
 `;
 
 const ImageFormatter = styled.div` 
@@ -295,7 +295,6 @@ const AgThemeBalham = styled.div.attrs(() => ({
   }))`
     padding-top: 20px;
     padding-bottom: 40px;
-    outline: 2px solid red;
     /* You can add additional styles here if needed */
 `;
 
