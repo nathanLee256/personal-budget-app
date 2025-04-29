@@ -670,13 +670,41 @@ export default function ImportData() {
                 <StyledAddItemButton
                   color="primary"
                   id="AddBItem"
+                  onClick={() => {
+                    console.log("Add Budget Item Button clicked");
+                    // update state to true to indicate the user selected to add "budget" item
+                    setAddBItem(true);
+                  }}
                 >
                   Add New Budget Item
                 </StyledAddItemButton>
                 {/* Collapse content for Add New Budget Item Button */}
                 <UncontrolledCollapse toggler="#AddBItem">
                   {/* Collapse content-When the user clikcs the button we need to render a form which prompts user to enter new item*/}
-                  <AddItemForm/>
+                  <AddItemForm
+                    toggle={toggle}
+                    newItem={newItem}
+                    setNewItem={setNewItem}
+                  />
+                </UncontrolledCollapse>
+                {/* Add Tax Item Button */}
+                <StyledAddItemButton
+                  color="danger"
+                  id="AddTItem"
+                  onClick={() => {
+                    console.log("Add Tax Item Button clicked");
+                  }}
+                >
+                  Add Tax Item
+                </StyledAddItemButton>
+                {/* Collapse content for Add New Budget Item Button */}
+                <UncontrolledCollapse toggler="#AddTItem">
+                  {/* Collapse content-When the user clikcs the button we need to render a form which prompts user to enter new item*/}
+                  <AddItemForm
+                    toggle={toggle}
+                    newItem={newItem}
+                    setNewItem={setNewItem}
+                  />
                 </UncontrolledCollapse>
             </div>
           </PortalSubmenu>
@@ -748,9 +776,9 @@ const StyledTable = styled(Table)`
 
 const StyledAddItemButton = styled(Button)`
   display: block;  // ✅ Ensures margin auto works for centering
-  width: 90%;
+  width: 100%;
   margin: 0 auto; // ✅ Centers it within its container (left & right margins auto)
-  margin-top: 0%;
+  margin-top: 5%;
   margin-bottom: 5%;
 `;
 
