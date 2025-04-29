@@ -9,11 +9,6 @@ import { Form, Label, Input} from 'reactstrap';
 export default function AddItemForm({
     toggle,
     newItem, setNewItem,
-    addBItem, setAddBItem,
-    addTItem, setAddTItem,
-    cachedSubmenuRef,
-    cachedDropdownIndexRef,
-    activeSubmenu
 }){
 
     return(
