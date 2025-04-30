@@ -42,11 +42,12 @@ export default function ImportData() {
   // END DEFINE
 
   //START cache variables 
-    const cachedSubmenuRef = useRef(null);
-    const cachedDropdownIndexRef = useRef(null);
 
     //reference variable to store the latest value(state) of the submenu (activeSubmenu obj)
     const activeSubmenuRef = useRef(null);
+
+    //reference variable to store the index of the open dropdown, when the user selects to add an item in the submenu
+    const cachedDropdownIndexRef = useRef(null);
 
   //END cache variables
 
@@ -79,7 +80,7 @@ export default function ImportData() {
     const [modal, setModal] = useState(false);
 
     //we also need to add an event handler which reverses the current value of the modal state
-    const toggle = () => setModal((prevState) =>(!prevState));
+    const modalToggle = () => setModal((prevState) =>(!prevState));
   
 
     //array of bools to store the state(open/closed) of each <CustomDropdown> element in the table
@@ -482,6 +483,7 @@ export default function ImportData() {
                   activeSubmenu={activeSubmenu}
                   setActiveSubmenu={setActiveSubmenu}
                   activeSubmenuRef={activeSubmenuRef}
+                  isOpen={dropdownOpen[rowIndex]} // ✅ NEW: control whether the DD is open
                 >
                   {/* Income Header */}
                   <StyledHeaderItem>Income</StyledHeaderItem> {/* <DropdownItem> */}
@@ -540,77 +542,89 @@ export default function ImportData() {
       </>
     );
 
-    const renderModal = () => (
-      <div> 
-        <Modal isOpen={modal} toggle={toggle}>
-          <ModalHeader toggle={toggle}>Confirm New { addBItem ? "Budget" : "Tax" } Item?</ModalHeader>
-          <ModalBody>
-              Are you sure you want to add this new { addBItem ? "budget" : "tax" } item? 
-              <br />
-              <em>{newItem}</em>
-          </ModalBody>
-          <ModalFooter>
-            <Button color="success" onClick={() => {
-              const cachedSubmenu = cachedSubmenuRef.current;
-              const cachedDDIndex = cachedDropdownIndexRef.current;
+    const renderModal = () => {
 
-              if (!cachedSubmenu || cachedDDIndex === null) {
-                  console.error("❌ Cannot add item — cachedSubmenu is null");
-                  toggle(); // close modal anyway
-                  return;
-              };
-          
-              if(addBItem){
-                  handleItemAdd(cachedSubmenu);  // ✅ safely add the budget item
-                  setNewItem("");                // ✅ reset input
-              }else{
-                  handleTaxItemAdd(cachedSubmenu); //safely add the new tax item
-              };
-              
-              
-              toggle();                      // ✅ close modal
-              
-          
-              // ✅ reopen dropdown and submenu
-              // this will update the bool at the specified index to true, opening the dropdown in the final column in that row(index) of table                                                                               
-              setDropdownOpen((prev) => {
-                  const newArray = prev.map((_, index) => index === cachedDDIndex ? true : false);
-                  return newArray;
-                  
-              });
-          
-              setActiveSubmenu(cachedSubmenu); // this will cause the conditional JSX from line 524/539 to render the submenu
-              }}
-            >
-              Confirm
-            </Button>{' '}
-            <Button color="danger" onClick={() => {
-              const cachedSubmenu = cachedSubmenuRef.current;
+      let itemType = "";
+      if(addBItem){
+        //add budget item modal JSX is rendered
+        itemType = "Budget"
+      }else if(addTItem){
+        //render the tax item modal JSX
+        itemType = "Tax"
+      }
 
-                          // reset state
-              setNewItem("");
-              toggle();
-          
-              if (!cachedSubmenu) {
-                  console.error("❌ Cannot reopen submenu — cachedSubmenu is null");
-                  return;
-              }
-          
-              setDropdownOpen((prev) => {
-                  const newState = [...prev];
-                  newState[cachedDropdownIndexRef.current] = true;
-                  return newState;
-              });
-          
-              setActiveSubmenu(cachedSubmenu);
-              }}
-            >
-              Cancel
-            </Button>
-          </ModalFooter>
-        </Modal>
-      </div>
-    );
+      return(
+        <div> 
+          <Modal isOpen={modal} toggle={modalToggle}>
+            <ModalHeader toggle={modalToggle}>Confirm New {itemType} Item?</ModalHeader>
+            <ModalBody>
+                Are you sure you want to add this new {itemType} item? 
+                <br />
+                <em>{newItem}</em>
+            </ModalBody>
+            <ModalFooter>
+              <Button color="success" onClick={() => {
+                const cachedSubmenu = activeSubmenuRef.current;
+                const cachedDDIndex = cachedDropdownIndexRef.current;
+
+                if (!cachedSubmenu || cachedDDIndex === null) {
+                    console.error("❌ Cannot add item — cachedSubmenu is null");
+                    modalToggle(); // close modal anyway
+                    return;
+                };
+            
+                if(addBItem){
+                    handleItemAdd(cachedSubmenu);  // ✅ safely add the budget item
+                    setNewItem("");                // ✅ reset input
+                }else{
+                    handleTaxItemAdd(cachedSubmenu); //safely add the new tax item
+                };
+                
+                
+                modalToggle();                      // ✅ close modal
+                
+            
+                // ✅ reopen dropdown and submenu
+                // this will update the bool at the specified index to true, opening the dropdown in the final column in that row(index) of table                                                                               
+                setDropdownOpen((prev) => {
+                    const newArray = prev.map((_, index) => index === cachedDDIndex ? true : false);
+                    return newArray;
+                    
+                });
+            
+                setActiveSubmenu(cachedSubmenu); // this will cause the conditional JSX from line 524/539 to render the submenu
+                }}
+              >
+                Confirm
+              </Button>{' '}
+              <Button color="danger" onClick={() => {
+                const cachedSubmenu = activeSubmenuRef.current;
+
+                            // reset state
+                setNewItem("");
+                modalToggle();
+            
+                if (!cachedSubmenu) {
+                    console.error("❌ Cannot reopen submenu — cachedSubmenu is null");
+                    return;
+                }
+            
+                setDropdownOpen((prev) => {
+                    const newState = [...prev];
+                    newState[cachedDropdownIndexRef.current] = true;
+                    return newState;
+                });
+            
+                setActiveSubmenu(cachedSubmenu);
+                }}
+              >
+                Cancel
+              </Button>
+            </ModalFooter>
+          </Modal>
+        </div>
+      )
+    };
 
   //END HELPER functions
 
@@ -670,8 +684,8 @@ export default function ImportData() {
                 <StyledAddItemButton
                   color="primary"
                   id="AddBItem"
-                  onClick={() => {
-                    console.log("Add Budget Item Button clicked");
+                  onClick={(e) => {
+
                     // update state to true to indicate the user selected to add "budget" item
                     setAddBItem(true);
                   }}
@@ -682,9 +696,11 @@ export default function ImportData() {
                 <UncontrolledCollapse toggler="#AddBItem">
                   {/* Collapse content-When the user clikcs the button we need to render a form which prompts user to enter new item*/}
                   <AddItemForm
-                    toggle={toggle}
+                    modalToggle={modalToggle}
                     newItem={newItem}
                     setNewItem={setNewItem}
+                    activeSubmenuRef={activeSubmenuRef}
+                    cachedDropdownIndexRef={cachedDropdownIndexRef}
                   />
                 </UncontrolledCollapse>
                 {/* Add Tax Item Button */}
@@ -701,9 +717,11 @@ export default function ImportData() {
                 <UncontrolledCollapse toggler="#AddTItem">
                   {/* Collapse content-When the user clikcs the button we need to render a form which prompts user to enter new item*/}
                   <AddItemForm
-                    toggle={toggle}
+                    modalToggle={modalToggle}
                     newItem={newItem}
                     setNewItem={setNewItem}
+                    activeSubmenuRef={activeSubmenuRef}
+                    cachedDropdownIndexRef={cachedDropdownIndexRef}
                   />
                 </UncontrolledCollapse>
             </div>
