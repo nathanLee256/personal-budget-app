@@ -1,4 +1,5 @@
-import { Form, Label, Input} from 'reactstrap'; 
+import { Form, Label, Input, Button} from 'reactstrap'; 
+import styled from 'styled-components';
 
 
 /* 
@@ -7,8 +8,10 @@ import { Form, Label, Input} from 'reactstrap';
     from the form.
 */
 export default function AddItemForm({
-    toggle,
+    modalToggle,
     newItem, setNewItem,
+    activeSubmenuRef,
+    cachedDropdownIndexRef
 }){
 
     return(
@@ -19,10 +22,12 @@ export default function AddItemForm({
                     e.preventDefault();
                     e.stopPropagation(); // Optional but consistent with button behavior
 
+                    //cache the current dropdown index (we don't need to cache the activeSubmenu state because the useEffect does that)
+                    
                 
                     // ✅ Open modal 
                     setTimeout(() => {
-                        toggle();
+                        modalToggle();
                     }, 0);
                 }}
             > 
@@ -56,10 +61,24 @@ export default function AddItemForm({
                         textAlign: "left"
                     }}
                 />
+                <StyledSubmitButton>
+                    Submit
+                </StyledSubmitButton>
             </Form>
 
             
         </>               
     )
 }
+
+const StyledSubmitButton = styled(Button)`
+    background-color: var(--bs-secondary);   // ✅ Bootstrap secondary background
+    border-color: var(--bs-secondary);       // ✅ Match border to background
+    color: #fff;                              // ✅ Make text readable on dark background 
+    display: block;  // ✅ Ensures margin auto works for centering
+    width: 100%;
+    margin: 0 auto; // ✅ Centers it within its container (left & right margins auto)
+    margin-top: 5%;
+    margin-bottom: 5%;
+`;
 
