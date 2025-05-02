@@ -1,3 +1,8 @@
+/* 
+	This file is where I am pasting code which has been edited out of my application. 
+	It is here should I need it again.
+*/
+
 {/* JSX which Renders the portal submenu if activeSubmenu is set */}
 {activeSubmenu && dropdownOpen[activeSubmenu.index] && (
 	console.log("Rendering PortalSubmenu"), 
@@ -128,18 +133,84 @@
 			  {/* Conditionally Render Form */}
 			  { 
 				addBItem || addTItem && (
-				  <AddItemForm
-					toggle={toggle}
-					newItem={newItem}
-					setNewItem={setNewItem}
-					addBItem={addBItem}
-					addTItem={addTItem}
-					cachedSubmenuRef={cachedSubmenuRef}
-					cachedDropdownIndexRef={cachedDropdownIndexRef}
-					activeSubmenu={activeSubmenu}
-				  />
+					<AddItemForm
+						toggle={toggle}
+						newItem={newItem}
+						setNewItem={setNewItem}
+						addBItem={addBItem}
+						addTItem={addTItem}
+						cachedSubmenuRef={cachedSubmenuRef}
+						cachedDropdownIndexRef={cachedDropdownIndexRef}
+						activeSubmenu={activeSubmenu}
+					/>
 			  )}
 			</StyledSubDDItem>
 	  </StyledSubmenuDiv>
 	</PortalSubmenu>
   )}
+
+/* 	
+	START code snippets for the previous dropdownmenu implementation.
+ 	This implementation required a state array of bools the same length as the userData array. Each bool value in the array
+	stored the current value of the isOpen prop of the array of dropdown menus (which represents the state of the dd -open/closed).
+	There is also a toggleDropdown() function which can be called to reverse the isOpen value of a specific dropdown (to open or
+	close it). Both were defined in the main ImportData component. 
+ */
+
+	//array of bools to store the state(open/closed) of each <CustomDropdown> element in the table
+	const [dropdownOpen, setDropdownOpen] = useState(
+		Array.isArray(userData) && userData.length > 0 ? new Array(userData.length).fill(false) : []
+	);
+
+	// runs when user toggles dropdowns - index represents the row of the table. Updates the state array at that index
+    const toggleDropdown = (index) => {
+		console.log("Toggling dropdown at index:", index);
+  
+		//the main dropdown needs to close 1- when the user toggles the button they used to open dropdown, and 2-when they click outside it
+		setDropdownOpen((prev) =>
+		  prev.map((_, i) => i === index ? !prev[i] : false)
+		);
+		
+		if(activeSubmenu){
+		  // Close the submenu if the dropwdown is toggled
+		  setActiveSubmenu(null);
+		};
+	  };
+
+	//state array of of strings which were previously being used to display as the text in the Button of the each dropdown
+    const [selectedCats, setSelectedCats] = useState(userData && userData.length > 0 ? userData.map(() => "Select") : []);
+
+	function alertFunction() {
+		alert("Data successfully saved to database!");
+	}
+
+	//handler for the Save Data button at the bottom of page
+    const handleDataSubmit = async (e) => {
+
+		alertFunction();
+		const url = 'http://localhost:3001/save';
+		e.preventDefault();
+		try {
+		  const payload = userData.map((row, index) => ({
+			...row,
+			category: selectedCats[index],
+			subcategory: selectedCats[index],
+		  }));
+		  console.log('Payload:', payload);
+		  const response = await fetch(url, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(payload),
+		  });
+		  if (response.ok) {
+			const result = await response.json();
+			console.log('Data saved successfully:', result);
+		  } else {
+			console.error('Server responded with an error:', response.status);
+		  }
+		} catch (error) {
+		  console.error('Error uploading file', error);
+		}
+	};
+
+/* END code snippets from ImportData */
