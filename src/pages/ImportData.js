@@ -46,15 +46,10 @@ export default function ImportData() {
     //reference variable to store the latest value(state) of the submenu (activeSubmenu obj)
     const activeSubmenuRef = useRef(null);
 
-    //reference variable to store the index of the open dropdown, when the user selects to add an item in the submenu
-    const cachedDropdownIndexRef = useRef(null);
-
   //END cache variables
 
   //START DEFINE State variables for this
 
-    //probably don't need this one
-    const [selectedCats, setSelectedCats] = useState(userData && userData.length > 0 ? userData.map(() => "Select") : []);
 
     /*  
       an array initialised as strings which will be displayed in the Toggle of the last column in each table row
@@ -72,7 +67,6 @@ export default function ImportData() {
     // state variable to enable/disable Save Data Button
     const [isSubmitReady, setIsSubmitReady] = useState(false);
 
-
     //state variable to store the user-entered new budgetItem
     const [newItem, setNewItem] = useState("");
 
@@ -82,11 +76,6 @@ export default function ImportData() {
     //we also need to add an event handler which reverses the current value of the modal state
     const modalToggle = () => setModal((prevState) =>(!prevState));
   
-
-    //array of bools to store the state(open/closed) of each <CustomDropdown> element in the table
-    const [dropdownOpen, setDropdownOpen] = useState(
-      Array.isArray(userData) && userData.length > 0 ? new Array(userData.length).fill(false) : []
-    );
 
     //state to conditionally render Input form in submenu when user chooses to add a new budget/tax item
     const [addBItem, setAddBItem] = useState(false);
@@ -225,62 +214,12 @@ export default function ImportData() {
       console.log("handleTaxItemAdd() function is running!");
     }
 
-    // runs when user toggles dropdowns - index represents the row of the table. Updates the state array at that index
-    const toggleDropdown = (index) => {
-      console.log("Toggling dropdown at index:", index);
-
-      //the main dropdown needs to close 1- when the user toggles the button they used to open dropdown, and 2-when they click outside it
-      setDropdownOpen((prev) =>
-        prev.map((_, i) => i === index ? !prev[i] : false)
-      );
-      
-      if(activeSubmenu){
-        // Close the submenu if the dropwdown is toggled
-        setActiveSubmenu(null);
-      };
-    };
-
-    
     
     //handler for the Save Data button at the bottom of page
     const handleDataSubmit = async (e) => {
-
-      
-
-
-
-
-
-      alertFunction();
-      const url = 'http://localhost:3001/save';
-      e.preventDefault();
-      try {
-        const payload = userData.map((row, index) => ({
-          ...row,
-          category: selectedCats[index],
-          subcategory: selectedCats[index],
-        }));
-        console.log('Payload:', payload);
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        if (response.ok) {
-          const result = await response.json();
-          console.log('Data saved successfully:', result);
-        } else {
-          console.error('Server responded with an error:', response.status);
-        }
-      } catch (error) {
-        console.error('Error uploading file', error);
-      }
+      //TBA
     };
 
-
-    function alertFunction() {
-      alert("Data successfully saved to database!");
-    }
 
     /*  
       when the user selects an item, we need to update the selectedItems state array at the right index. 
@@ -387,11 +326,9 @@ export default function ImportData() {
 
   //START useEffect Hooks
 
-    // useEffect to update dropdown and submenu states when userData changes
+    // useEffect to update the selectedItems array when userData changes
     useEffect(() => {
       if (Array.isArray(userData) && userData.length > 0) {
-        setDropdownOpen(new Array(userData.length).fill(false));
-        setSelectedCats(userData.map(() => "Select"));
         setSelectedItems(userData.map(() => "Select Item"));
       }
     }, [userData]);
@@ -409,9 +346,6 @@ export default function ImportData() {
 
     }, [activeSubmenu]);
     
-
-    
-
   //END hooks
 
   //START HELPER functions which are called from the main JSX return statement, to render some JSX within the main JSX
@@ -483,7 +417,6 @@ export default function ImportData() {
                   activeSubmenu={activeSubmenu}
                   setActiveSubmenu={setActiveSubmenu}
                   activeSubmenuRef={activeSubmenuRef}
-                  isOpen={dropdownOpen[rowIndex]} // ✅ NEW: control whether the DD is open
                 >
                   {/* Income Header */}
                   <StyledHeaderItem>Income</StyledHeaderItem> {/* <DropdownItem> */}
@@ -563,60 +496,44 @@ export default function ImportData() {
                 <em>{newItem}</em>
             </ModalBody>
             <ModalFooter>
-              <Button color="success" onClick={() => {
-                const cachedSubmenu = activeSubmenuRef.current;
-                const cachedDDIndex = cachedDropdownIndexRef.current;
+              <Button color="success" onMouseDown={(e) => {
 
-                if (!cachedSubmenu || cachedDDIndex === null) {
-                    console.error("❌ Cannot add item — cachedSubmenu is null");
-                    modalToggle(); // close modal anyway
-                    return;
-                };
+                /* 
+                  onMouseDown fires before the click outside the dropdown/submenu area triggers it to close (default behaviour) 
+                  Then once onMouseDown fires, the first 2 lines of the callback code block prevent the default behaviour. And 
+                  if the dropdown and submenu do not close, then we don't need to manually reopen them which is a win.
+                */
+
+                //stop the dropdown and submenu from closing
+                e.preventDefault(); 
+                e.stopPropagation(); 
+
+                //access the latest submenu state
+                const cachedSubmenu = activeSubmenuRef.current;
             
-                if(addBItem){
+                if(addBItem && cachedSubmenu){
                     handleItemAdd(cachedSubmenu);  // ✅ safely add the budget item
                     setNewItem("");                // ✅ reset input
                 }else{
                     handleTaxItemAdd(cachedSubmenu); //safely add the new tax item
                 };
                 
-                
                 modalToggle();                      // ✅ close modal
-                
-            
-                // ✅ reopen dropdown and submenu
-                // this will update the bool at the specified index to true, opening the dropdown in the final column in that row(index) of table                                                                               
-                setDropdownOpen((prev) => {
-                    const newArray = prev.map((_, index) => index === cachedDDIndex ? true : false);
-                    return newArray;
-                    
-                });
-            
-                setActiveSubmenu(cachedSubmenu); // this will cause the conditional JSX from line 524/539 to render the submenu
                 }}
               >
                 Confirm
-              </Button>{' '}
-              <Button color="danger" onClick={() => {
-                const cachedSubmenu = activeSubmenuRef.current;
+              </Button>
+              <Button color="danger" onMouseDown={(e) => {
 
-                            // reset state
+                //stop the dropdown and submenu from closing
+                e.preventDefault(); 
+                e.stopPropagation(); 
+
+                // reset state
                 setNewItem("");
                 modalToggle();
             
-                if (!cachedSubmenu) {
-                    console.error("❌ Cannot reopen submenu — cachedSubmenu is null");
-                    return;
-                }
-            
-                setDropdownOpen((prev) => {
-                    const newState = [...prev];
-                    newState[cachedDropdownIndexRef.current] = true;
-                    return newState;
-                });
-            
-                setActiveSubmenu(cachedSubmenu);
-                }}
+              }}
               >
                 Cancel
               </Button>
@@ -699,8 +616,7 @@ export default function ImportData() {
                     modalToggle={modalToggle}
                     newItem={newItem}
                     setNewItem={setNewItem}
-                    activeSubmenuRef={activeSubmenuRef}
-                    cachedDropdownIndexRef={cachedDropdownIndexRef}
+                    budgetItems={budgetItems}
                   />
                 </UncontrolledCollapse>
                 {/* Add Tax Item Button */}
@@ -720,8 +636,7 @@ export default function ImportData() {
                     modalToggle={modalToggle}
                     newItem={newItem}
                     setNewItem={setNewItem}
-                    activeSubmenuRef={activeSubmenuRef}
-                    cachedDropdownIndexRef={cachedDropdownIndexRef}
+                    budgetItems={budgetItems}
                   />
                 </UncontrolledCollapse>
             </div>
