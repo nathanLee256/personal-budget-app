@@ -1,6 +1,6 @@
 import { Form, Label, Input, Button} from 'reactstrap'; 
 import styled from 'styled-components';
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 
 /* 
@@ -30,36 +30,78 @@ export default function AddItemForm({
     */
     function InputValidator(value, rules = {}) {
         // specific static error messages
-        const NO_INPUT_ERR = "This field is required.";
-        const BUDGET_ITEM_ALREADY_EXISTS = "Budget item already exists."
+        const NO_INPUT_ERR = "This field is required.";//err msg 1
+        const BUDGET_ITEM_ALREADY_EXISTS = "Budget item already exists." //err msg 2
 
         
         // Dynamic message generators
-        const MSG_TOO_SHORT_ERR = (min) => `Minimum length is ${min} characters.`;
-        const MSG_TOO_LONG_ERR = (max) => `Maximum length is ${max} characters.`;
+        const MSG_TOO_SHORT_ERR = (min) => `Minimum length is ${min} characters.`; //err msg 3
+        const MSG_TOO_LONG_ERR = (max) => `Maximum length is ${max} characters.`;  //err msg 4
         
         if (rules.required && !value.trim()) {
+            //if true it means that the user input is an empty string when they clicked Submit
+            // in which case the function needs to return err msg 1 
             return NO_INPUT_ERR;
         }
         
         if (rules.minLength && value.length < rules.minLength) {
+            //if true it means that the user input is less than the rules.minLength parameter
+            //in which case the function needs to return err msg 3 
             return MSG_TOO_SHORT_ERR(rules.minLength);
         }
         
         if (rules.maxLength && value.length > rules.maxLength) {
+            //if true it means that the user input is more than the rules.maxLength parameter
+            //in which case the function needs to return err msg 4 
             return MSG_TOO_LONG_ERR(rules.maxLength);
         }
 
-        //iterate over the budgetItems array using a sequential search
-        // Check for duplicate budget item
-        if (Array.isArray(budgetItems)) {
-            const exists = budgetItems.some((bItem) => bItem.item === value);
-            if (exists) return BUDGET_ITEM_ALREADY_EXISTS;
+        //iterate over the budgetItems object. Recall that the level-3 properties store an array of objects (budget items).
+        //thus we need to select the level-3 properties
+        /* The budgetItems object looks like this:
+        {
+            "Income": {
+                "Standard": {
+                    "StandardIncome": [
+                        {
+                            "item": "Salary",
+                            "amount": 500,
+                            "frequency": "weekly",
+                            "total": 2000
+                        }
+                    ]
+                },...
         }
-        
-        
-        return ""; // ✅ No errors
-    }
+        */
+        for(const primaryCat in budgetItems){
+            //select the level-2 properties
+            //e.g. when primaryCat == {Income}, secondaryCats is an object which includes Standard, Benefit, and Other as the level-1 props
+            const secondaryCats = budgetItems[primaryCat];
+
+            //iterate over the secondaryCats obj
+            for(const secondaryCat in secondaryCats){
+                //select the level-3 properties
+                //e.g. when secondaryCat == {Standard}, tertiaryCats is an object which includes StandardIncome
+                const tertiaryCats = secondaryCats[secondaryCat];
+
+                //iterate over the tertiaryCats obj
+                for(const tertiaryCat in tertiaryCats){
+                    //select the array stored in each level-3 property
+                    //e.g. when tertiaryCat == [StandardIncome], objArray == [{},{},{},...]
+                    const objArray = tertiaryCats[tertiaryCat];
+
+                    //iterate over the objArray and search for the value
+                    let valuePresent = false;
+                    valuePresent = objArray.some((bItem) => bItem.item === value ? true : false);
+                    if(valuePresent){
+                        return BUDGET_ITEM_ALREADY_EXISTS;
+                    }
+                }
+            }
+        }   
+        //if this runs it means none of the above if conditions(which returned an err msg) were true (IE the user input is clean)
+        return ""; 
+    };
     
 
 
@@ -146,8 +188,6 @@ export default function AddItemForm({
                     Submit
                 </StyledSubmitButton>
             </Form>
-
-            
         </>               
     )
 }
