@@ -252,16 +252,25 @@ export default function ImportData() {
 
       
     };
-    function toggleSubmenu(prim, sec, tert, ind, rect){
+
+    //event handler for the tertiary category links in the custom dropdown
+    /* 
+      NB: This function works (when the previous iteration didn't) because We only update the state once, depending on 
+      whether the same submenu is already open. Before, we were calling setActiveSubmenu() twice in quick succession 
+      (once to close, once to reopen), which caused React to batch the updates — sometimes re-opening the 
+      submenu immediately
+    */
+    function initialiseSubmenu(pCat, sCat, tCat, rowIndex, event) {
+      const rect = event.currentTarget.getBoundingClientRect();
 
       //access the latest version of the submenu state
       const latestVal = activeSubmenuRef.current;
 
-      const modScat = objMap[prim][sec].Prop;
-      const modTcat = objMap[prim][sec][tert];
+      const modScat = objMap[pCat][sCat].Prop;
+      const modTcat = objMap[pCat][sCat][tCat];
 
       // Generate a unique ID for this submenu
-      const subId = `${prim}-${sec}-${tert}-${ind}`;
+      const subId = `${pCat}-${sCat}-${tCat}-${rowIndex}`;
 
       if(!latestVal){
         //if true it means that no submenu is currently open because activeSubmenu === null
@@ -271,12 +280,12 @@ export default function ImportData() {
         setTimeout(() => {
           setActiveSubmenu({
             id: subId,
-            type: prim,
+            type: pCat,
             secondary: modScat,
             tertiary: modTcat,
             top: rect.top + window.scrollY,
             left: rect.right + window.scrollX,
-            index: ind,
+            index: rowIndex,
           });
         }, 0)
 
@@ -295,31 +304,18 @@ export default function ImportData() {
           setTimeout(() => {
             setActiveSubmenu({
               id: subId,
-              type: prim,
+              type: pCat,
               secondary: modScat,
               tertiary: modTcat,
               top: rect.top + window.scrollY,
               left: rect.right + window.scrollX,
-              index: ind,
+              index: rowIndex,
             });
           }, 0)
 
         }
 
       }
-    }
-
-    //event handler for the tertiary category links in the custom dropdown
-    /* 
-      NB: This function works (when the previous iteration didn't) because We only update the state once, depending on 
-      whether the same submenu is already open. Before, we were calling setActiveSubmenu() twice in quick succession 
-      (once to close, once to reopen), which caused React to batch the updates — sometimes re-opening the 
-      submenu immediately
-    */
-    function initialiseSubmenu(pCat, sCat, tCat, rowIndex, event) {
-      const rect = event.currentTarget.getBoundingClientRect();
-    
-      toggleSubmenu(pCat,sCat,tCat,rowIndex,rect);
     }
   
   //END EVENT handlers
@@ -617,6 +613,7 @@ export default function ImportData() {
                     newItem={newItem}
                     setNewItem={setNewItem}
                     budgetItems={budgetItems}
+                    activeSubmenu={activeSubmenu}
                   />
                 </UncontrolledCollapse>
                 {/* Add Tax Item Button */}
@@ -637,6 +634,7 @@ export default function ImportData() {
                     newItem={newItem}
                     setNewItem={setNewItem}
                     budgetItems={budgetItems}
+                    activeSubmenu={activeSubmenu}
                   />
                 </UncontrolledCollapse>
             </div>
