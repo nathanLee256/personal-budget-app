@@ -1,4 +1,4 @@
-import { Form, Label, Input, Button} from 'reactstrap'; 
+import { Form, Label, Input, Button } from 'reactstrap'; 
 import styled from 'styled-components';
 import { useState } from "react";
 
@@ -11,8 +11,21 @@ import { useState } from "react";
 export default function AddItemForm({
     modalToggle,
     newItem, setNewItem,
-    budgetItems
+    budgetItems,
+    activeSubmenu
 }){
+    /* 
+        Recall that activeSubmenu is an object which looks like this:
+        {
+            id: subId,
+            type: prim,
+            secondary: modScat,
+            tertiary: modTcat,
+            top: rect.top + window.scrollY,
+            left: rect.right + window.scrollX,
+            index: ind,
+        }
+     */
 
     /* 
         NB: normally we would need to create a value state to store user input as below, but we are already using
@@ -57,7 +70,7 @@ export default function AddItemForm({
         }
 
         //iterate over the budgetItems object. Recall that the level-3 properties store an array of objects (budget items).
-        //thus we need to select the level-3 properties
+        //thus we need to select the level-3 property which is represented by the activeSubmenu
         /* The budgetItems object looks like this:
         {
             "Income": {
@@ -73,32 +86,14 @@ export default function AddItemForm({
                 },...
         }
         */
-        for(const primaryCat in budgetItems){
-            //select the level-2 properties
-            //e.g. when primaryCat == {Income}, secondaryCats is an object which includes Standard, Benefit, and Other as the level-1 props
-            const secondaryCats = budgetItems[primaryCat];
-
-            //iterate over the secondaryCats obj
-            for(const secondaryCat in secondaryCats){
-                //select the level-3 properties
-                //e.g. when secondaryCat == {Standard}, tertiaryCats is an object which includes StandardIncome
-                const tertiaryCats = secondaryCats[secondaryCat];
-
-                //iterate over the tertiaryCats obj
-                for(const tertiaryCat in tertiaryCats){
-                    //select the array stored in each level-3 property
-                    //e.g. when tertiaryCat == [StandardIncome], objArray == [{},{},{},...]
-                    const objArray = tertiaryCats[tertiaryCat];
-
-                    //iterate over the objArray and search for the value
-                    let valuePresent = false;
-                    valuePresent = objArray.some((bItem) => bItem.item === value ? true : false);
-                    if(valuePresent){
-                        return BUDGET_ITEM_ALREADY_EXISTS;
-                    }
-                }
-            }
-        }   
+       let itemPresent = false;
+       const budgetItemsArr = budgetItems[activeSubmenu.type][activeSubmenu.secondary][activeSubmenu.tertiary];
+       itemPresent = budgetItemsArr.some((bItem) => bItem.item === value);
+       if(itemPresent){
+        //if this is true it means that the user input is already a budget item in which case we need to return err msg 2
+        return BUDGET_ITEM_ALREADY_EXISTS;
+       }
+        
         //if this runs it means none of the above if conditions(which returned an err msg) were true (IE the user input is clean)
         return ""; 
     };
