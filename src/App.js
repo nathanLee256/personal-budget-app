@@ -11,15 +11,16 @@ import Worksheet from './pages/Worksheet';
 import Home from './pages/Home';
 import TaxTool from './pages/TaxTool';
 import BudgetTool from './pages/BudgetTool';
-
+import { useAuth } from './components/AuthContext.js';
 
 
 function App() 
 {
+  const { authenticated } = useAuth(); // or get it from props/context
   
   return (
     <>
-      <MyAppNavbar />
+      {authenticated && <MyAppNavbar />} {/* conditionally render Navbar */}
       <Routes>
         <Route path="/" element={<Landing/>}/>
         <Route path="/home" element={<Home/>}/>
