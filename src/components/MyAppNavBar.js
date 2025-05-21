@@ -41,6 +41,11 @@ const MyAppNavbar = () => {
               Tax Tool
             </NavLink>
           </NavItem>
+          <NavItem>
+            <NavLink onClick={() => navigate("/giving_tool")} style={{ color: "white", cursor: "pointer" }}>
+              Giving Tool
+            </NavLink>
+          </NavItem>
         </Nav>
         <Nav className="ml-auto" navbar>
           <NavItem className="ml-auto">
