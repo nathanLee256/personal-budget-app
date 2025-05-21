@@ -11,7 +11,9 @@ import Worksheet from './pages/Worksheet';
 import Home from './pages/Home';
 import TaxTool from './pages/TaxTool';
 import BudgetTool from './pages/BudgetTool';
+import GivingTool from './pages/GivingTool.js';
 import { useAuth } from './components/AuthContext.js';
+
 
 
 function App() 
@@ -28,6 +30,7 @@ function App()
         <Route path="/import_data" element={<ImportData/>}/>
         <Route path="/budget_tool" element={<BudgetTool/>}/>
         <Route path="/tax_tool" element={<TaxTool/>}/>
+        <Route path="/giving_tool" element={<GivingTool/>}/>
         <Route path="/my_budget" element={<ImportCSV/>}/> 
       </Routes>
     </>
