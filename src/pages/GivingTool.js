@@ -108,6 +108,31 @@ export default function GivingTool(){
                         </StyledNavLink>
                     </NavItem>
                 </Nav>
+                {/* A container for the content displayed based on the currently active tab. */}
+                <TabContent activeTab={activeTab}>
+                    {/* JSX which is rendered when its tabId matches the activeTab value in <TabContent> */}
+                    {/* TabPane represents the JSX content associated with a specific folder tab */}
+                    {/* tab 1 */}
+                    <TabPane tabId="1" style={{backgroundColor: "white", padding: "0 20px"}}>
+
+                    </TabPane>
+                    {/* tab 2 */}
+                    <TabPane tabId="2" style={{backgroundColor: "white", padding: "0 20px"}}>
+
+                    </TabPane>
+                    {/* tab 3 */}
+                    <TabPane tabId="3" style={{backgroundColor: "white", padding: "0 20px"}}>
+
+                    </TabPane>
+                    {/* tab 4 */}
+                    <TabPane tabId="4" style={{backgroundColor: "white", padding: "0 20px"}}>
+
+                    </TabPane>
+                    {/* tab 5 */}
+                    <TabPane tabId="5" style={{backgroundColor: "white", padding: "0 20px"}}>
+
+                    </TabPane>
+                </TabContent>
             </StyledContainer>
         </SubWrapper>
     );
