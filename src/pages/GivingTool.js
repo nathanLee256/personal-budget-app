@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import {
     Button,
     Collapse,
+    Table as ReactstrapTable,
     Nav,
     NavItem,
     NavLink,
@@ -52,6 +53,52 @@ export default function GivingTool(){
         const year = new Date().getFullYear();
         setCurrentYear(year); // ✅ This is allowed
     }, []);
+
+    //START helper functions to render the JSX for the table headers/rows
+        const renderTableHeaders = () => {
+        
+            const totalColumns = 7;
+            
+            const rowArray = new Array(5).fill(""); // Initialize an array to define 5 table columns with strings
+            rowArray[0] = "Gift Type";
+            rowArray[1] = "Organisation";
+            rowArray[2] = "Amount";
+            rowArray[3] = "Date";
+            rowArray[4] = "Description";
+            rowArray[5] = "Receipt";
+            rowArray[totalColumns - 1] = "Delete";
+
+            // Define widths for each column
+            const columnWidths = ["15%", "15%", "10%", "15%", "15%","15%","15%"];
+        
+            return (
+            <thead>
+                <tr>
+                    {rowArray.map((val, index) => (
+                        <th key={index} style={{ width: columnWidths[index] }}>{val}</th>
+                    ))}
+                </tr>
+            </thead>
+            );
+        
+        };
+
+            const renderTableRows = () => (
+                <>
+                </>
+                
+            );
+        //END Helper functions
+
+        //array to be mapped over in the JSX
+        const tabIdArray = ["1","2","3","4","5"];
+
+        //START event handlers
+        const addRow = () => {
+            
+        };
+
+        //END handlers
 
     //JSX
     return(
@@ -111,27 +158,21 @@ export default function GivingTool(){
                 {/* A container for the content displayed based on the currently active tab. */}
                 <TabContent activeTab={activeTab}>
                     {/* JSX which is rendered when its tabId matches the activeTab value in <TabContent> */}
-                    {/* TabPane represents the JSX content associated with a specific folder tab */}
-                    {/* tab 1 */}
-                    <TabPane tabId="1" style={{backgroundColor: "white", padding: "0 20px"}}>
-
-                    </TabPane>
-                    {/* tab 2 */}
-                    <TabPane tabId="2" style={{backgroundColor: "white", padding: "0 20px"}}>
-
-                    </TabPane>
-                    {/* tab 3 */}
-                    <TabPane tabId="3" style={{backgroundColor: "white", padding: "0 20px"}}>
-
-                    </TabPane>
-                    {/* tab 4 */}
-                    <TabPane tabId="4" style={{backgroundColor: "white", padding: "0 20px"}}>
-
-                    </TabPane>
-                    {/* tab 5 */}
-                    <TabPane tabId="5" style={{backgroundColor: "white", padding: "0 20px"}}>
-
-                    </TabPane>
+                    {/* TabPane encloses the JSX content associated with a specific folder tab */}
+                    {
+                        tabIdArray.map((tabId) => (
+                            <TabPane tabId={tabId} style={{backgroundColor: "white", padding: "0 20px"}}>
+                                <StyledTable borderless>
+                                    {renderTableHeaders()}
+                                    {renderTableRows()}
+                                </StyledTable>
+                                {/* For the tab representing current year, render a button under table */}
+                                { 
+                                    tabId === "1"? <StyledButton onClick={addRow}>Add New Gift</StyledButton> : <></> 
+                                }   
+                            </TabPane> 
+                        ))
+                    }
                 </TabContent>
             </StyledContainer>
         </SubWrapper>
@@ -205,5 +246,23 @@ const StyledNavLink = styled(NavLink)`
       color: black !important;
       border: 2px solid black !important;
       /* No need to repeat border-radius here if it's the same */
+    }
+`;
+
+//specifies the style of the ReactStrapTable
+const StyledTable = styled(ReactstrapTable)`
+`;
+
+//specifies the style of the 'Add New Gift' button which appears at the bottom of the table
+const StyledButton = styled(Button)`
+    background-color: #007bff; /* Primary blue */
+    color: white;             /* Text color */
+    font-size: 16px;          /* Increase font size */
+    padding: 10px 20px;       /* Add padding */
+    margin-bottom: 20px;
+    margin-left: 5px;
+    border-radius: 5px;       /* Rounded corners */
+    &:hover {
+        background-color: #0056b3; /* Darker blue on hover */
     }
 `;
