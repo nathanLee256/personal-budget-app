@@ -695,7 +695,7 @@ import SubmittedDataTable from '../components/SubmittedDataTable.js';
       performs a HTTP POST request to the server endpoint and send the data in the req object body (as a JSON object) */
       const handleSave = async (e) => {
         //alertFunction();
-        const url = 'http://localhost:3001/save_items'
+        const url = 'http://localhost:3001/worksheet/save_items'
         e.preventDefault(); // Prevent default form submission behavior
 
 
@@ -811,7 +811,7 @@ import SubmittedDataTable from '../components/SubmittedDataTable.js';
 
           if (!userId) return; // ✅ Wait until userId is available before making the request
 
-          const url = `http://localhost:3001/retrieve_items?UserId=${userId}`; // ✅ Pass userId as a URL parameter
+          const url = `http://localhost:3001/worksheet/retrieve_items?UserId=${userId}`; // ✅ Pass userId as a URL parameter
 
           //construct an object which maps the tertiary_category table column value to the respective setState function
           const tertiaryCategoryMapping = {
