@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     Button,
     Collapse,
@@ -10,6 +10,7 @@ import {
     TabPane,
   } from 'reactstrap';
 import styled from 'styled-components';
+import { useAuth } from '../components/AuthContext.js';
 
 
 /* 
@@ -20,15 +21,21 @@ import styled from 'styled-components';
     //Example Gift Record
     {
         //Year== 2025, Month == "May", Week == 3
-        type: "Tithe",
-        organisation: "Highway Church",
+        type: "One-off",
+        organisation: "Salvation Army",
         amount: 50,
         date: "23/05/2025",
-        description: "weekly tithe",
+        description: "Red shield appeal",
         receipt: "{url_path}"
     }
 */
 export default function GivingTool(){
+
+    // START Retrieve user_id from AuthContext
+
+        const { userId } = useAuth();
+
+    //END retrieve
 
     // START State and updater function for the activeTab state
         
@@ -45,16 +52,100 @@ export default function GivingTool(){
         };
     // END State and updater function for the activeTab state
 
-    //state variable to store the current year
-    const[currentYear, setCurrentYear] = useState(null);
+    //START state variable  to store the current year
+        const[currentYear, setCurrentYear] = useState(null);
 
-    //useEffect hook which runs once everytime the page is first rendered, to obtain and set the currentYear state
-    useEffect(() => {
-        const year = new Date().getFullYear();
-        setCurrentYear(year); // ✅ This is allowed
-    }, []);
+        //useEffect hook which runs once everytime the page is first rendered, to obtain and set the currentYear state
+        useEffect(() => {
+            const year = new Date().getFullYear();
+            setCurrentYear(year); // ✅ This is allowed
+        }, []);
+
+    //END state variable
+
+    //START state variable to store the user's donations (array of gift objects) returned from the server
+        //initialise as an empty array
+        const [userGifts, setUserGifts] = useState([]);
+    //END state
+
+    //START event handlers
+        const addRow = () => {
+            
+        };
+
+    //END handlers
+
+    //START array to be mapped over in the JSX
+        const tabIdArray = ["1","2","3","4","5"];
+    //END array
+
+    //START hook to perform fetch request to server to obtain user gifts for selected period
+        useEffect(() => {
+
+            //perform a fetch request to the server to obtain all of the donations the user has made in the selected year
+            if (!userId) return; // ✅ Wait until userId is available before making the request
+
+            //next obtain the selected year based on the tab param
+            let selectedYear = 0;
+            let tab = activeTab;
+
+            switch(tab) {
+                case tabIdArray[0]:
+                    // in this case user has selected the current year folder tab
+                    selectedYear = currentYear;
+                    break;
+                case tabIdArray[1]:
+                    // current year -1
+                    selectedYear = currentYear - 1;
+                    break;
+                case tabIdArray[2]:
+                    // current year -2
+                    selectedYear = currentYear - 2;
+                    break;
+                case tabIdArray[3]:
+                    // current year -3
+                    selectedYear = currentYear - 3;
+                    break;
+                case tabIdArray[4]:
+                    // current year -4
+                    selectedYear = currentYear - 4;
+                    break;
+                default:
+                    // default code block
+            }
+
+            //perform fetch request (HTTP-GET) to the server route, send it the userId and selectedYear
+            const url = `http://localhost:3001/giving_tool/retrieve_gift_items?UserId=${userId}&Year=${selectedYear}`;
+            
+            fetch(url, {
+                method: "GET",
+                headers: {
+                "Accept": "application/json"
+                },
+            })
+
+            // set up the Promise chain
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                //update userGifts array with server (data)
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+
+        }, [activeTab]);    //runs once when the component mounts (activeTab == currentYear), and then everytime user toggles another tab
+
+
+    //END hook
 
     //START helper functions to render the JSX for the table headers/rows
+
+        //function which returns the JSX representing the table headers
         const renderTableHeaders = () => {
         
             const totalColumns = 7;
@@ -72,33 +163,36 @@ export default function GivingTool(){
             const columnWidths = ["15%", "15%", "10%", "15%", "15%","15%","15%"];
         
             return (
-            <thead>
-                <tr>
-                    {rowArray.map((val, index) => (
-                        <th key={index} style={{ width: columnWidths[index] }}>{val}</th>
-                    ))}
-                </tr>
-            </thead>
+                <thead>
+                    <tr>
+                        {rowArray.map((val, index) => (
+                            <th key={index} style={{ width: columnWidths[index] }}>{val}</th>
+                        ))}
+                    </tr>
+                </thead>
             );
-        
         };
 
-            const renderTableRows = () => (
+        //function which returns the JSX representing the table rows
+        const renderTableRows = () => { 
+
+            
+
+            
+            return(
                 <>
                 </>
                 
             );
-        //END Helper functions
-
-        //array to be mapped over in the JSX
-        const tabIdArray = ["1","2","3","4","5"];
-
-        //START event handlers
-        const addRow = () => {
-            
         };
 
-        //END handlers
+    //END Helper functions
+
+        
+
+    
+
+
 
     //JSX
     return(
