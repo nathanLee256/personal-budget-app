@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
     Button,
     Collapse,
+    Dropdown,
     Table as ReactstrapTable,
     Nav,
     NavItem,
@@ -36,6 +37,16 @@ export default function GivingTool(){
         const { userId } = useAuth();
 
     //END retrieve
+
+    //START Collapse state and toggler function
+
+        //state variable which stores the isOpen state (true/false) of the Collapse
+        const [addgiftCollapse, setAddgiftCollapse] = useState(false);
+
+        //toggler function which runs when user clicks Collapse button and reverses the isOPen state of the Collapse
+        const collapseToggle = () => setAddgiftCollapse(!addgiftCollapse);
+
+    //END Collapse 
 
     // START State and updater function for the activeTab state
         
@@ -146,7 +157,7 @@ export default function GivingTool(){
     //START helper functions to render the JSX for the table headers/rows
 
         //function which returns the JSX representing the table headers
-        const renderTableHeaders = () => {
+        const renderTableHeaders = (position) => {
         
             const totalColumns = 7;
             
@@ -166,7 +177,7 @@ export default function GivingTool(){
                 <thead>
                     <tr>
                         {rowArray.map((val, index) => (
-                            <th key={index} style={{ width: columnWidths[index] }}>{val}</th>
+                            <th key={index} style={{ width: columnWidths[index] }}>{ position == "bottom" ? "" : val }</th>
                         ))}
                     </tr>
                 </thead>
@@ -174,16 +185,49 @@ export default function GivingTool(){
         };
 
         //function which returns the JSX representing the table rows
-        const renderTableRows = () => { 
+        const renderTableRows = (position) => { 
 
-            
-
-            
-            return(
-                <>
-                </>
-                
-            );
+            if(position === "top"){
+                //if this evals as T it means the collapse is not open in which case we just need to render the JSX above button
+                //iterate (map) over the userGifts array and display each object in the array in a single table row
+                return(
+                    <>
+                    </>
+                    
+                );
+            }else{
+                //if this runs it means the collapse has been opened in which case we need this func to render the JSX of the Collapse
+                return(
+                    <thead>
+                        <tr>
+                            <td>
+                                {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
+                                Test
+                            </td>
+                            <td>
+                                {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
+                            </td>
+                            <td>
+                                {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
+                            </td>
+                            <td>
+                                {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
+                            </td>
+                            <td>
+                                {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
+                            </td>
+                            <td>
+                                {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
+                            </td>
+                            <td>
+                                {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
+                            </td>
+                        </tr>
+                    </thead>
+                    
+                );
+            }
+               
         };
 
     //END Helper functions
@@ -257,12 +301,22 @@ export default function GivingTool(){
                         tabIdArray.map((tabId) => (
                             <TabPane tabId={tabId} style={{backgroundColor: "white", padding: "0 20px"}}>
                                 <StyledTable borderless>
-                                    {renderTableHeaders()}
-                                    {renderTableRows()}
+                                    {renderTableHeaders("top")}
+                                    {renderTableRows("top")}
                                 </StyledTable>
                                 {/* For the tab representing current year, render a button under table */}
+                                
+                                <Collapse isOpen={addgiftCollapse}>
+                                    {/* Collapse JSX which renders *above button when it is toggled */}
+                                    {/* set table column widths */}
+                                    <LargeText>Enter new gift details below:</LargeText>
+                                    <StyledTable borderless>
+                                        {renderTableHeaders("bottom")}
+                                        {renderTableRows("bottom")}
+                                    </StyledTable>
+                                </Collapse>
                                 { 
-                                    tabId === "1"? <StyledButton onClick={addRow}>Add New Gift</StyledButton> : <></> 
+                                    tabId === "1"? <StyledButton onClick={collapseToggle}>Add New Gift</StyledButton> : <></> 
                                 }   
                             </TabPane> 
                         ))
