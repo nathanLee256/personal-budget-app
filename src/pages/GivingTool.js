@@ -3,6 +3,9 @@ import {
     Button,
     Collapse,
     Dropdown,
+    DropdownToggle,
+    DropdownMenu,
+    DropdownItem,
     Table as ReactstrapTable,
     Nav,
     NavItem,
@@ -48,6 +51,22 @@ export default function GivingTool(){
 
     //END Collapse 
 
+    //START State variable and toggler function for the dropdown 
+        //array of bool values which represent the isOpen state of the two dropdowns in the Collapse JSX of the 2025 tab
+        //The 2 dropdowns are located in the first 2 columns
+        //each dropdown component is referenced by: dropdownOpen[colIndex]
+        const [dropdownOpen, setDropdownOpen] = useState(new Array(2).fill(false));
+
+        //toggler function which reverses the isOpen state of a dropdown which is referenced by its colIndex
+        const toggleDropdown = (colIndex) => {
+            setDropdownOpen((prevState) => {
+                const newArr = prevState.map((isOpen, i) => colIndex === i ? !isOpen : isOpen);
+                return newArr;
+            });     
+        }
+
+    //END state 
+
     // START State and updater function for the activeTab state
         
         //state which stores the current active folder tab (by its id)
@@ -61,6 +80,11 @@ export default function GivingTool(){
                 setActiveTab(tab);
             }
         };
+
+        //column ID's
+        const COLUMN_ONE = 0;
+        const COLUMN_TWO = 1;
+
     // END State and updater function for the activeTab state
 
     //START state variable  to store the current year
@@ -202,7 +226,12 @@ export default function GivingTool(){
                         <tr>
                             <td>
                                 {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
-                                Test
+                                <Dropdown
+                                    isOpen={dropdownOpen[COLUMN_ONE]}
+                                    toggle={() => toggleDropdown(COLUMN_ONE)}
+                                >
+
+                                </Dropdown>
                             </td>
                             <td>
                                 {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
