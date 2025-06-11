@@ -120,7 +120,7 @@ const AuthProvider = ({ children }) => {
     if(!userId) return; //early exit the function is userId is falsey
 
     //this code runs if userId has been assigned a value
-    const url = `http://localhost:3001/retrieve_items?UserId=${userId}`; // use the same server route as in Worksheet (it does the same thing)
+    const url = `http://localhost:3001/worksheet/retrieve_items?UserId=${userId}`; // use the same server route as in Worksheet (it does the same thing)
 
     // Perform the GET request
     fetch(url, {
