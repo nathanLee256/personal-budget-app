@@ -51,19 +51,55 @@ export default function GivingTool(){
 
     //END Collapse 
 
-    //START State variable and toggler function for the dropdown 
+    //START State object and toggler function for the 2 dropdowns 
         //array of bool values which represent the isOpen state of the two dropdowns in the Collapse JSX of the 2025 tab
         //The 2 dropdowns are located in the first 2 columns
         //each dropdown component is referenced by: dropdownOpen[colIndex]
-        const [dropdownOpen, setDropdownOpen] = useState(new Array(2).fill(false));
+        const [dropdown, setDropdown] = useState({
+            columnOne: {
+                dropdownOpen: false,
+                selectedItem: "" //initialise as an empty string
+            },
+            columnTwo: {
+                dropdownOpen: false,
+                selectedItem: ""
+            }
+        });
 
         //toggler function which reverses the isOpen state of a dropdown which is referenced by its colIndex
         const toggleDropdown = (colIndex) => {
-            setDropdownOpen((prevState) => {
-                const newArr = prevState.map((isOpen, i) => colIndex === i ? !isOpen : isOpen);
-                return newArr;
-            });     
+            setDropdown((prevState) => ({
+                ...prevState,
+                [colIndex]: {
+                    ...prevState[colIndex],
+                    dropdownOpen: !prevState[colIndex].dropdownOpen
+                }
+            }));     
         }
+        // array of gift types for the columnOne dropdown menu
+        const giftTypes = [
+            // note: some of these categories represent gifts that are not tax-deductible
+            "Tithe",                      // not tax-deductible (typically given to a church, but not to a DGR in AU)
+            "Personal Gift",             // not tax-deductible
+            "Partnership Gift",          // not tax-deductible (depends on recipient’s DGR status)
+            "Charitable Donation",       // tax-deductible if given to a registered DGR
+            "Missionary Support",        // not tax-deductible (unless via a registered DGR)
+            "Sponsorship",               // not tax-deductible (unless structured through a DGR)
+            "Memorial Gift",             // tax-deductible if given to a DGR
+            "Birthday/Anniversary Gift", // not tax-deductible
+            "Event Donation",            // tax-deductible if no material benefit received and paid to a DGR
+            "Building Fund",             // tax-deductible only if to a registered DGR (e.g., school building fund)
+            "Relief Aid",                // tax-deductible if through a registered relief organization (e.g., Red Cross)
+            "Education Fund",            // tax-deductible only if through a DGR (e.g., scholarship funds)
+            "Pledge Payment",            // follows the original gift type (deductible only if pledged to a DGR)
+            "Holiday Giving",            // not tax-deductible (typically informal or personal giving)
+            "Anonymous Gift",            // follows underlying gift type
+            "Community Outreach",        // tax-deductible if run by a DGR
+            "Legacy/Bequest Gift"        // tax-deductibility depends on structure and recipient; usually not claimed by donor
+        ];
+
+        //column identifiers (used to reference a column from the JSX)
+        const columnIDs = ["columnOne", "columnTwo"];
 
     //END state 
 
@@ -80,10 +116,6 @@ export default function GivingTool(){
                 setActiveTab(tab);
             }
         };
-
-        //column ID's
-        const COLUMN_ONE = 0;
-        const COLUMN_TWO = 1;
 
     // END State and updater function for the activeTab state
 
@@ -108,6 +140,21 @@ export default function GivingTool(){
             
         };
 
+        //runs when user selects a gift type from column 1 of table (when prompted to enter the dets of a new gift)
+        function handleTypeSelect(colId, type){
+            console.log("Setting selected item for:", type); // ✅ DEBUG
+            //update the dropdown state obj to display the selected gift type in the DropdownToggle
+            setDropdown((prevState) =>({
+                ...prevState, // preserve all the other obj properties (columnTwo)
+                [colId]: {
+                    ...prevState[colId], //preserve the dropdownOpen state (for now)
+                    selectedItem: type
+                }
+            }));
+            //now close the dropdown
+            toggleDropdown(columnIDs[0]);
+        };
+
     //END handlers
 
     //START array to be mapped over in the JSX
@@ -115,7 +162,7 @@ export default function GivingTool(){
     //END array
 
     //START hook to perform fetch request to server to obtain user gifts for selected period
-        useEffect(() => {
+        /* useEffect(() => {
 
             //perform a fetch request to the server to obtain all of the donations the user has made in the selected year
             if (!userId) return; // ✅ Wait until userId is available before making the request
@@ -173,7 +220,7 @@ export default function GivingTool(){
                 console.error("Error:", error);
             });
 
-        }, [activeTab]);    //runs once when the component mounts (activeTab == currentYear), and then everytime user toggles another tab
+        }, [activeTab]); */    //runs once when the component mounts (activeTab == currentYear), and then everytime user toggles another tab
 
 
     //END hook
@@ -220,6 +267,7 @@ export default function GivingTool(){
                     
                 );
             }else{
+                console.log("✅ Rendering dropdown row"); // ADD THIS
                 //if this runs it means the collapse has been opened in which case we need this func to render the JSX of the Collapse
                 return(
                     <thead>
@@ -227,10 +275,24 @@ export default function GivingTool(){
                             <td>
                                 {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
                                 <Dropdown
-                                    isOpen={dropdownOpen[COLUMN_ONE]}
-                                    toggle={() => toggleDropdown(COLUMN_ONE)}
+                                    isOpen={dropdown[columnIDs[0]].dropdownOpen}
+                                    toggle={() => toggleDropdown(columnIDs[0])}
                                 >
-
+                                    <DropdownToggle caret color="info">
+                                        {dropdown[columnIDs[0]]?.selectedItem || "Select"}
+                                    </DropdownToggle>
+                                    <DropdownMenu>
+                                        {/* iterate over giftTypes to display DropdownItems */}
+                                        {
+                                            giftTypes.map((cat, i) => (
+                                                <DropdownItem
+                                                    key={i}
+                                                    onClick={() => handleTypeSelect(columnIDs[0], cat)}
+                                                >{cat}
+                                                </DropdownItem>
+                                            ))
+                                        }
+                                    </DropdownMenu>
                                 </Dropdown>
                             </td>
                             <td>
@@ -328,7 +390,7 @@ export default function GivingTool(){
                     {/* TabPane encloses the JSX content associated with a specific folder tab */}
                     {
                         tabIdArray.map((tabId) => (
-                            <TabPane tabId={tabId} style={{backgroundColor: "white", padding: "0 20px"}}>
+                            <TabPane key={tabId} tabId={tabId} style={{backgroundColor: "white", padding: "0 20px"}}>
                                 <StyledTable borderless>
                                     {renderTableHeaders("top")}
                                     {renderTableRows("top")}
