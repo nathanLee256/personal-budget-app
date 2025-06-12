@@ -58,11 +58,9 @@ export default function GivingTool(){
         const [dropdown, setDropdown] = useState({
             columnOne: {
                 dropdownOpen: false,
-                selectedItem: "" //initialise as an empty string
             },
             columnTwo: {
                 dropdownOpen: false,
-                selectedItem: ""
             }
         });
 
@@ -71,7 +69,6 @@ export default function GivingTool(){
             setDropdown((prevState) => ({
                 ...prevState,
                 [colIndex]: {
-                    ...prevState[colIndex],
                     dropdownOpen: !prevState[colIndex].dropdownOpen
                 }
             }));     
@@ -112,10 +109,37 @@ export default function GivingTool(){
         // When the user clicks (toggles) an inactive tab this function will run which will update the activeTab state to 
         // the id value of another tab (e.g. "2"). 
         const toggleTab = (tab) => {
+            //update the activeTab
             if (activeTab !== tab) {
                 setActiveTab(tab);
             }
         };
+
+        //function to return the selected year (for display in the JSX)
+        const getYear = (tabID) => {
+            const year = new Date().getFullYear();
+    
+            switch(tabID) {
+                case tabIdArray[0]:
+                    // current year — do nothing
+                    return year;
+                    
+                case tabIdArray[1]:
+                    return year - 1;
+                    
+                case tabIdArray[2]:
+                    return year - 2;
+                    
+                case tabIdArray[3]:
+                    return year - 3;
+                    
+                case tabIdArray[4]:
+                    return year - 4;
+                    
+                default:
+                    // optional: fallback
+            }
+        }
 
     // END State and updater function for the activeTab state
 
@@ -135,22 +159,33 @@ export default function GivingTool(){
         const [userGifts, setUserGifts] = useState([]);
     //END state
 
+    //START state object to store user selections: will be used to append new object to userGifts when user has entered all data
+        const [userSelections, setUserSelections] = useState({
+            giftType: "",
+            organisation: "",
+            amount: 0,
+            date:"",
+            description: "",
+            receipt: null,
+        });
+    //END state
+
     //START event handlers
         const addRow = () => {
             
         };
 
         //runs when user selects a gift type from column 1 of table (when prompted to enter the dets of a new gift)
-        function handleTypeSelect(colId, type){
-            console.log("Setting selected item for:", type); // ✅ DEBUG
+        const handleTypeSelect = (type) => {
+
+            //check that function runs
+            console.log("✅ handleTypeSelect is firing!"); 
+            
             //update the dropdown state obj to display the selected gift type in the DropdownToggle
-            setDropdown((prevState) =>({
-                ...prevState, // preserve all the other obj properties (columnTwo)
-                [colId]: {
-                    ...prevState[colId], //preserve the dropdownOpen state (for now)
-                    selectedItem: type
-                }
-            }));
+            setUserSelections((prevState) => ({
+                ...prevState,
+                giftType: type
+            }))
             //now close the dropdown
             toggleDropdown(columnIDs[0]);
         };
@@ -228,7 +263,7 @@ export default function GivingTool(){
     //START helper functions to render the JSX for the table headers/rows
 
         //function which returns the JSX representing the table headers
-        const renderTableHeaders = (position) => {
+        const renderTableHeaders = () => {
         
             const totalColumns = 7;
             
@@ -248,7 +283,7 @@ export default function GivingTool(){
                 <thead>
                     <tr>
                         {rowArray.map((val, index) => (
-                            <th key={index} style={{ width: columnWidths[index] }}>{ position == "bottom" ? "" : val }</th>
+                            <th key={index} style={{ width: columnWidths[index] }}>{ val }</th>
                         ))}
                     </tr>
                 </thead>
@@ -267,10 +302,10 @@ export default function GivingTool(){
                     
                 );
             }else{
-                console.log("✅ Rendering dropdown row"); // ADD THIS
+                console.log("✅ Rendering dropdown row"); 
                 //if this runs it means the collapse has been opened in which case we need this func to render the JSX of the Collapse
                 return(
-                    <thead>
+                    <tbody>
                         <tr>
                             <td>
                                 {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
@@ -279,17 +314,18 @@ export default function GivingTool(){
                                     toggle={() => toggleDropdown(columnIDs[0])}
                                 >
                                     <DropdownToggle caret color="info">
-                                        {dropdown[columnIDs[0]]?.selectedItem || "Select"}
+                                        {userSelections.giftType || "Select Type"}
                                     </DropdownToggle>
                                     <DropdownMenu>
                                         {/* iterate over giftTypes to display DropdownItems */}
                                         {
                                             giftTypes.map((cat, i) => (
-                                                <DropdownItem
+                                                <button
                                                     key={i}
-                                                    onClick={() => handleTypeSelect(columnIDs[0], cat)}
+                                                    className="dropdown-item"
+                                                    onClick={() => handleTypeSelect(cat)}
                                                 >{cat}
-                                                </DropdownItem>
+                                                </button>
                                             ))
                                         }
                                     </DropdownMenu>
@@ -314,7 +350,7 @@ export default function GivingTool(){
                                 {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
                             </td>
                         </tr>
-                    </thead>
+                    </tbody>
                     
                 );
             }
@@ -391,23 +427,32 @@ export default function GivingTool(){
                     {
                         tabIdArray.map((tabId) => (
                             <TabPane key={tabId} tabId={tabId} style={{backgroundColor: "white", padding: "0 20px"}}>
-                                <StyledTable borderless>
-                                    {renderTableHeaders("top")}
-                                    {renderTableRows("top")}
-                                </StyledTable>
-                                {/* For the tab representing current year, render a button under table */}
-                                
-                                <Collapse isOpen={addgiftCollapse}>
-                                    {/* Collapse JSX which renders *above button when it is toggled */}
-                                    {/* set table column widths */}
-                                    <LargeText>Enter new gift details below:</LargeText>
-                                    <StyledTable borderless>
-                                        {renderTableHeaders("bottom")}
-                                        {renderTableRows("bottom")}
-                                    </StyledTable>
-                                </Collapse>
+                                <h3>{ getYear(tabId) } Gifts:</h3>
+                                {/* render the historical gifts (table headers and data rows) if userGifts is truthy */}
+                                {
+                                    Array.isArray(userGifts) && userGifts.length > 0 ? 
+                                    <>
+                                        <StyledTable borderless>
+                                            {renderTableHeaders()}
+                                            {renderTableRows("top")}
+                                        </StyledTable>
+                                    </> : 
+                                    <>
+                                        <p>No gifts for selected period</p>
+                                    </>
+                                }
+                                {/* render the prompt to enter new gift for the 2025 folder tab */}
                                 { 
-                                    tabId === "1"? <StyledButton onClick={collapseToggle}>Add New Gift</StyledButton> : <></> 
+                                    tabId === "1"? 
+                                    <>
+                                        <h3>New Gifts</h3>
+                                        <p>Enter gift details below:</p>
+                                        <StyledTable borderless>
+                                            {renderTableHeaders()}
+                                            {renderTableRows("bottom")}
+                                        </StyledTable>
+                                    </> : 
+                                    <></> 
                                 }   
                             </TabPane> 
                         ))
