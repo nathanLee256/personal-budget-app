@@ -60,9 +60,9 @@ export default function SITable({  //
                     rowIndex === index ? { ...row, [field]: userInput } : row // Update the specified row
                   ),
                 }));
-              };
+            };
     
-              const toggleDropdown = (index) => {
+            const toggleDropdown = (index) => {
                 setSiState((prevState) => ({
                   ...prevState, // Preserve other properties of the state
                   DropdownOpen: prevState.DropdownOpen.map((isOpen, i) =>
@@ -74,7 +74,7 @@ export default function SITable({  //
                 setTimeout(() => {
                   console.log("State after toggle:", siState.DropdownOpen);
                 }, 0);
-              };
+            };
     
             //function to calculate the new total everytime the frequency field of a row is updated
             
