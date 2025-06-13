@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import {
     Button,
-    Collapse,
     Dropdown,
     DropdownToggle,
     DropdownMenu,
     DropdownItem,
+    Input,
     Table as ReactstrapTable,
     Nav,
     NavItem,
@@ -103,7 +103,7 @@ export default function GivingTool(){
     // START State and updater function for the activeTab state
         
         //state which stores the current active folder tab (by its id)
-        const [activeTab, setActiveTab] = useState("1");
+        const [activeTab, setActiveTab] = useState(0);
 
         // Event handler function to toggle the active tab
         // When the user clicks (toggles) an inactive tab this function will run which will update the activeTab state to 
@@ -115,41 +115,21 @@ export default function GivingTool(){
             }
         };
 
-        //function to return the selected year (for display in the JSX)
-        const getYear = (tabID) => {
-            const year = new Date().getFullYear();
-    
-            switch(tabID) {
-                case tabIdArray[0]:
-                    // current year — do nothing
-                    return year;
-                    
-                case tabIdArray[1]:
-                    return year - 1;
-                    
-                case tabIdArray[2]:
-                    return year - 2;
-                    
-                case tabIdArray[3]:
-                    return year - 3;
-                    
-                case tabIdArray[4]:
-                    return year - 4;
-                    
-                default:
-                    // optional: fallback
-            }
-        }
 
     // END State and updater function for the activeTab state
 
-    //START state variable  to store the current year
-        const[currentYear, setCurrentYear] = useState(null);
+    //START state array  to store the folder tab values (years)
 
-        //useEffect hook which runs once everytime the page is first rendered, to obtain and set the currentYear state
+        const[tabLabels, setTabLabels] = useState([]);
+
+        //useEffect hook which runs once everytime the page is first rendered, to obtain and set the tabLabels state array
         useEffect(() => {
             const year = new Date().getFullYear();
-            setCurrentYear(year); // ✅ This is allowed
+            const labels = [];
+            for (let x = 0; x < 5; x++) {
+                labels.push(year - x);
+            }
+            setTabLabels(labels);
         }, []);
 
     //END state variable
@@ -188,6 +168,15 @@ export default function GivingTool(){
             }))
             //now close the dropdown
             toggleDropdown(columnIDs[0]);
+        };
+
+        //function runs when user enters input in the Organisation (column 1) in the New Gift table
+        //updates the userSelections state
+        const handleOrgChange = (column, userInput) => {
+            setUserSelections((prevState) => ({
+                ...prevState, //preserve the other state obj properties
+                [column]: userInput
+            }));
         };
 
     //END handlers
@@ -320,19 +309,23 @@ export default function GivingTool(){
                                         {/* iterate over giftTypes to display DropdownItems */}
                                         {
                                             giftTypes.map((cat, i) => (
-                                                <button
+                                                <DropdownItem
                                                     key={i}
-                                                    className="dropdown-item"
                                                     onClick={() => handleTypeSelect(cat)}
                                                 >{cat}
-                                                </button>
+                                                </DropdownItem>
                                             ))
                                         }
                                     </DropdownMenu>
                                 </Dropdown>
                             </td>
                             <td>
-                                {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
+                                {/* column 1 displays an input field which prompts user to enter the name of the organisation */}
+                                <Input
+                                    value={userSelections.organisation}
+                                    onChange={(e) => handleOrgChange("organisation", e.target.value)}
+                                    placeholder="Enter organisation"
+                                />
                             </td>
                             <td>
                                 {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
@@ -377,57 +370,28 @@ export default function GivingTool(){
                 </LargeText>
                 {/* container for group of tabs */}
                 <Nav tabs>
-                    {/* folder tab for current year */}
-                    <NavItem>
-                        {/* clickable link inside NavItem */}
-                        <StyledNavLink
-                            className={activeTab === "1" ? "active" : ""}
-                            onClick={() => toggleTab("1")}
-                        >
-                            {currentYear}
-                        </StyledNavLink>
-                    </NavItem>
-                    <NavItem>
-                        <StyledNavLink
-                            className={activeTab === "2" ? "active" : ""}
-                            onClick={() => toggleTab("2")}
-                        >
-                            {currentYear - 1}
-                        </StyledNavLink>
-                    </NavItem>
-                    <NavItem>
-                        <StyledNavLink
-                            className={activeTab === "3" ? "active" : ""}
-                            onClick={() => toggleTab("3")}
-                        >
-                            {currentYear - 2}
-                        </StyledNavLink>
-                    </NavItem>
-                    <NavItem>
-                        <StyledNavLink
-                            className={activeTab === "4" ? "active" : ""}
-                            onClick={() => toggleTab("4")}
-                        >
-                            {currentYear - 3}
-                        </StyledNavLink>
-                    </NavItem>
-                    <NavItem>
-                        <StyledNavLink
-                            className={activeTab === "5" ? "active" : ""}
-                            onClick={() => toggleTab("5")}
-                        >
-                            {currentYear - 4}
-                        </StyledNavLink>
-                    </NavItem>
+                    {
+                        tabLabels.map((year, index) => (
+                            <NavItem key={year}>
+                                {/* clickable link inside NavItem */}
+                                <StyledNavLink
+                                    className={activeTab === index ? "active" : ""}
+                                    onClick={() => toggleTab(index)}
+                                >
+                                    {tabLabels[index]}
+                                </StyledNavLink>
+                            </NavItem>
+                        ))
+                    }
                 </Nav>
                 {/* A container for the content displayed based on the currently active tab. */}
                 <TabContent activeTab={activeTab}>
                     {/* JSX which is rendered when its tabId matches the activeTab value in <TabContent> */}
                     {/* TabPane encloses the JSX content associated with a specific folder tab */}
                     {
-                        tabIdArray.map((tabId) => (
-                            <TabPane key={tabId} tabId={tabId} style={{backgroundColor: "white", padding: "0 20px"}}>
-                                <h3>{ getYear(tabId) } Gifts:</h3>
+                        tabLabels.map((year, index) => (
+                            <TabPane key={year} tabId={index} style={{backgroundColor: "white", padding: "0 20px"}}>
+                                <h3>{ tabLabels[index] } Gifts:</h3>
                                 {/* render the historical gifts (table headers and data rows) if userGifts is truthy */}
                                 {
                                     Array.isArray(userGifts) && userGifts.length > 0 ? 
@@ -443,9 +407,9 @@ export default function GivingTool(){
                                 }
                                 {/* render the prompt to enter new gift for the 2025 folder tab */}
                                 { 
-                                    tabId === "1"? 
+                                    index === 0 ? 
                                     <>
-                                        <h3>New Gifts</h3>
+                                        <h3>New Gift</h3>
                                         <p>Enter gift details below:</p>
                                         <StyledTable borderless>
                                             {renderTableHeaders()}
