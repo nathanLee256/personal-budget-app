@@ -15,6 +15,8 @@ import {
   } from 'reactstrap';
 import styled from 'styled-components';
 import { useAuth } from '../components/AuthContext.js';
+import Autosuggest from 'react-autosuggest';
+
 
 
 /* 
@@ -99,6 +101,74 @@ export default function GivingTool(){
         const columnIDs = ["columnOne", "columnTwo"];
 
     //END state 
+
+    //START state variables and handlers/helpers for the autosuggest functionality
+
+        // array stores the full list of DGR's from the database
+        const [orgList, setOrgList] = useState([]); 
+
+        // stores the list of DGR suggestions which will populate the menu afer each keystroke of user input
+        // there will be an event handler function which updates the list whenever the user input changes
+        const [orgSuggestions, setOrgSuggestions] = useState([]); 
+
+        //stores the current value in the input field
+        const [orgValue, setOrgValue] = useState(''); 
+        
+        /* NB: the following functions are listed below in the order that they are called in the process */
+
+        // 0- useEffect hook to retrieve organisations (from API endpoint, when page is first rendered)
+        useEffect(() => {
+            // Example static list of DGR organisations
+            const organisations = [
+                "Red Cross",
+                "Greenpeace",
+                "World Vision",
+                "UNICEF",
+                "Doctors Without Borders",
+                "St Vincent de Paul",
+                "Oxfam Australia"
+            ];
+            setOrgList(organisations);
+        }, []);
+
+        //1- event handler which runs when user types input into <Autosuggest> input field
+        const onOrgChange = (event, { newValue }) => {
+            setOrgValue(newValue);
+        };
+
+        // 2- handler function which Filters the full org list to get matches based on current input
+        const onSuggestionsFetchRequested = ({ value }) => {
+            const inputValue = value.trim().toLowerCase();
+            const inputLength = inputValue.length;
+
+            const filtered = inputLength === 0 ? [] : orgList.filter(org =>
+                    org.toLowerCase().includes(inputValue)
+                );
+            setOrgSuggestions(filtered);
+        };
+
+        // 3- helper function which renders each suggestion in the dropdown list
+        const renderSuggestion = (suggestion) => (
+            <div>{suggestion}</div>
+        );
+
+        // 4-helper function which returns the suggestion string to display in the input after selection
+        const getSuggestionValue = (suggestion) => suggestion;
+
+        //5- event handler function which runs when the user has made a selection from dropdown list. It updates the userSelections state
+        const onSuggestionSelected = (event, { suggestion }) => {
+            setUserSelections(prev => ({
+                ...prev,
+                organisation: suggestion
+            }));
+        };
+        
+        // 6-helper/cleanup function which Clears the suggestions list (called when input is cleared or blurred)
+        const onSuggestionsClearRequested = () => {
+            setOrgSuggestions([]);
+        };
+
+    //END state
 
     // START State and updater function for the activeTab state
         
@@ -321,11 +391,21 @@ export default function GivingTool(){
                             </td>
                             <td>
                                 {/* column 1 displays an input field which prompts user to enter the name of the organisation */}
-                                <Input
-                                    value={userSelections.organisation}
-                                    onChange={(e) => handleOrgChange("organisation", e.target.value)}
-                                    placeholder="Enter organisation"
-                                />
+                                <SuggestionsWrapper>
+                                    <Autosuggest
+                                        suggestions={orgSuggestions}
+                                        onSuggestionsFetchRequested={onSuggestionsFetchRequested}
+                                        onSuggestionsClearRequested={onSuggestionsClearRequested}
+                                        getSuggestionValue={getSuggestionValue}
+                                        renderSuggestion={renderSuggestion}
+                                        onSuggestionSelected={onSuggestionSelected}
+                                        inputProps={{
+                                            placeholder: "Enter organisation",
+                                            value: orgValue,
+                                            onChange: onOrgChange
+                                        }}
+                                    />
+                                </SuggestionsWrapper>
                             </td>
                             <td>
                                 {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
@@ -514,3 +594,36 @@ const StyledButton = styled(Button)`
         background-color: #0056b3; /* Darker blue on hover */
     }
 `;
+
+
+
+
+//specifies the style of the Autosuggest component (which it wraps)
+const SuggestionsWrapper = styled.div`
+    position: relative; /* ⬅️ Add this to anchor the absolute dropdown */
+
+    .react-autosuggest__suggestions-list {
+        list-style-type: none;
+        padding-left: 0;
+        margin: 0;
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        background-color: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        position: absolute;
+        width: 100%; /* ⬅️ Limit width to match parent (input field) */
+    }
+
+    .react-autosuggest__suggestion {
+        cursor: pointer;
+        padding: 8px;
+    }
+
+    .react-autosuggest__suggestion--highlighted {
+        background-color: #e6f7ff;
+    }
+`;
+
+
