@@ -118,17 +118,54 @@ export default function GivingTool(){
 
         // 0- useEffect hook to retrieve organisations (from API endpoint, when page is first rendered)
         useEffect(() => {
-            // Example static list of DGR organisations
-            const organisations = [
-                "Red Cross",
-                "Greenpeace",
-                "World Vision",
-                "UNICEF",
-                "Doctors Without Borders",
-                "St Vincent de Paul",
-                "Oxfam Australia"
-            ];
-            setOrgList(organisations);
+
+            //fetch
+            const url = "http://localhost:3001/gifts/retrieve_orgs";
+            const options = {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            };
+            const ZERO = 0;
+
+            fetch(url, options)
+                //set up the Promise chain
+                // 1st .then() handles failure (IE Promise.state == 'rejected' && Promise.result == {err}) by throwing Error to catch
+                .then(response => {
+                    if(!response.ok){
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+
+                //2nd .then() handles success (IE Promise.state == 'fulfilled' && Promise.result == {value})
+                .then(data => {
+                    //now the data the server sends back should be a JSON object in the following form:
+                    /* 
+                        data = {
+                            "IsData": true,
+                            "Organisations" : [
+                                {"entityName": "Salvation Army", "abn": 1234567},
+                                {"entityName": "Red Cross", "abn": 2345678}
+                            ]
+                        }
+                     */
+                    //first check data for server route error
+                    const organisations = data.Organisations;
+                    if (!Array.isArray(organisations) || organisations.length === ZERO) {
+                        throw new Error("Server Route Error-Organisations is not a non-empty array.");
+                    };
+
+                    //update state
+                    setOrgList(organisations);
+                })
+
+                // this block runs in the event that an error occured in either .then() block 
+                .catch(error => {
+                    console.error("Failed to retrieve organisations:", error.message);
+                });
+
         }, []);
 
         //1- event handler which runs when user types input into <Autosuggest> input field
@@ -142,24 +179,25 @@ export default function GivingTool(){
             const inputLength = inputValue.length;
 
             const filtered = inputLength === 0 ? [] : orgList.filter(org =>
-                    org.toLowerCase().includes(inputValue)
+                    org.entityName.toLowerCase().includes(inputValue)
                 );
+            
             setOrgSuggestions(filtered);
         };
 
         // 3- helper function which renders each suggestion in the dropdown list
         const renderSuggestion = (suggestion) => (
-            <div>{suggestion}</div>
+            <div>{suggestion.entityName}</div>
         );
 
         // 4-helper function which returns the suggestion string to display in the input after selection
-        const getSuggestionValue = (suggestion) => suggestion;
+        const getSuggestionValue = (suggestion) => suggestion.entityName;
 
         //5- event handler function which runs when the user has made a selection from dropdown list. It updates the userSelections state
         const onSuggestionSelected = (event, { suggestion }) => {
             setUserSelections(prev => ({
                 ...prev,
-                organisation: suggestion
+                organisation: suggestion.entityName, abn: suggestion.abn
             }));
         };
         
@@ -405,6 +443,13 @@ export default function GivingTool(){
                                             onChange: onOrgChange
                                         }}
                                     />
+                                    {
+                                        orgSuggestions.length === 0 && orgValue? 
+                                            <p>
+                                                No matches found
+                                            </p> : 
+                                            <></>
+                                    }
                                 </SuggestionsWrapper>
                             </td>
                             <td>
@@ -613,7 +658,7 @@ const SuggestionsWrapper = styled.div`
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         z-index: 1000;
         position: absolute;
-        width: 100%; /* ⬅️ Limit width to match parent (input field) */
+        width: 200%; /* ⬅️ Limit width to match parent (input field) */
     }
 
     .react-autosuggest__suggestion {
