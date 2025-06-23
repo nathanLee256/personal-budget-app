@@ -6,6 +6,8 @@ import {
     DropdownMenu,
     DropdownItem,
     Input,
+    InputGroup,
+    InputGroupText,
     Table as ReactstrapTable,
     Nav,
     NavItem,
@@ -16,6 +18,8 @@ import {
 import styled from 'styled-components';
 import { useAuth } from '../components/AuthContext.js';
 import Autosuggest from 'react-autosuggest';
+import debounce from 'lodash.debounce'; //module to speed up autosuggest
+
 
 
 
@@ -173,17 +177,23 @@ export default function GivingTool(){
             setOrgValue(newValue);
         };
 
-        // 2- handler function which Filters the full org list to get matches based on current input
+        // 2a- runs by default every time orgValue state changes, and calls the 2b handler function 
         const onSuggestionsFetchRequested = ({ value }) => {
+            debouncedFetchSuggestions(value);
+        };
+
+        //2b- debounce() which Filters the full org list to get matches based on current input
+        const debouncedFetchSuggestions = debounce((value) => {
             const inputValue = value.trim().toLowerCase();
             const inputLength = inputValue.length;
 
             const filtered = inputLength === 0 ? [] : orgList.filter(org =>
-                    org.entityName.toLowerCase().includes(inputValue)
-                );
-            
-            setOrgSuggestions(filtered);
-        };
+                org.entityName.toLowerCase().includes(inputValue)
+            );
+
+            const limited = filtered.slice(0, 10); // only show top 10 matches
+            setOrgSuggestions(limited);
+        }, 150); // 150ms delay
 
         // 3- helper function which renders each suggestion in the dropdown list
         const renderSuggestion = (suggestion) => (
@@ -256,6 +266,26 @@ export default function GivingTool(){
             description: "",
             receipt: null,
         });
+
+        //handler which runs when user enters a value in the 'amount' column <InputGrouptext> field
+        const handleAmountChange = (val) => {
+            //udpate the userSelections state
+            setUserSelections((prevState) => ({
+                ...prevState,
+                amount: val
+            }));
+
+        };
+
+        //handler which runs when the user enters/selects a date in the 'date' column
+        const handleDateChange = (newDate) => {
+            //udpate the userSelections state
+            setUserSelections((prevState) => ({
+                ...prevState,
+                date: newDate
+            }));
+
+        }
     //END state
 
     //START event handlers
@@ -444,7 +474,7 @@ export default function GivingTool(){
                                         }}
                                     />
                                     {
-                                        orgSuggestions.length === 0 && orgValue? 
+                                        orgSuggestions.length === 0 && !userSelections.organisation && orgValue ? 
                                             <p>
                                                 No matches found
                                             </p> : 
@@ -453,13 +483,26 @@ export default function GivingTool(){
                                 </SuggestionsWrapper>
                             </td>
                             <td>
-                                {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
+                                {/* column 2 displays an amount input which prompts the user to enter a gift type */}
+                                <InputGroup>
+                                    <InputGroupText>$</InputGroupText> {/* Prepend $ symbol */}
+                                    <Input
+                                        value={userSelections.amount}
+                                        onChange={(e) => handleAmountChange(e.target.value)}
+                                        placeholder="Enter amount"
+                                    />
+                                </InputGroup>
                             </td>
                             <td>
-                                {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
+                                {/* column 3  prompts the user to select a date or enter a date */}
+                                <input
+                                    type="date"
+                                    value={userSelections.date}
+                                    onChange={(e) => handleDateChange(e.target.value)}
+                                />
                             </td>
                             <td>
-                                {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
+                                {/* column 4 displays an Input which prompts the user to enter a string gift description */}
                             </td>
                             <td>
                                 {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
