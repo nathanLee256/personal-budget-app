@@ -5,9 +5,11 @@ import {
     DropdownToggle,
     DropdownMenu,
     DropdownItem,
+    FormGroup,
     Input,
     InputGroup,
     InputGroupText,
+    Label,
     Table as ReactstrapTable,
     Nav,
     NavItem,
@@ -284,6 +286,13 @@ export default function GivingTool(){
                 ...prevState,
                 date: newDate
             }));
+        };
+
+        const handleDescriptionChange = (text) => {
+            setUserSelections((prevState) => ({
+                ...prevState,
+                description: text
+            }));
 
         }
     //END state
@@ -502,7 +511,17 @@ export default function GivingTool(){
                                 />
                             </td>
                             <td>
-                                {/* column 4 displays an Input which prompts the user to enter a string gift description */}
+                                {/* column 4 displays an Input which prompts the user to enter a string gift description */}   
+                                <FormGroup>
+                                    <Input
+                                        id="descriptionText"
+                                        name="text"
+                                        type="textarea"
+                                        placeholder="Enter gift description"
+                                        value={userSelections.description}
+                                        onChange={(e) => handleDescriptionChange(e.target.value)}
+                                    />
+                                </FormGroup>
                             </td>
                             <td>
                                 {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
