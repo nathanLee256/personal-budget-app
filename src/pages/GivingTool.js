@@ -220,6 +220,33 @@ export default function GivingTool(){
 
     //END state
 
+    //START handler/s for the upload file functionality
+        
+        // note that we don't need to add a 'file' state object to store the uploaded file object since we are using 
+        // the userSelections.receipt object.property for this purpose
+        // handlers are defined here in the order that they are called
+
+        //1- runs when user clicks the 'Upload Receipt' Button. When this occurs, the handler programmatically clicks 
+        // the hidden <input type="file"> element which opens up the fs dialogue box, and prompts user to choose file
+        const openFs = () => {
+            document.getElementById('fileInput').click();
+        };
+
+        //2- handler is called automatically when user has selected a file from fs
+        // It receives the file object (event.target.files[0]), and uses it to update the userSelections state obj
+        const handleFileChange = (event) => {
+            const selectedFile = event.target.files[0];
+            if (selectedFile) {
+                setUserSelections((prevState) => ({
+                    ...prevState,
+                    receipt: selectedFile
+                }));
+            }
+        };
+        
+        
+    //END handler/s
+
     // START State and updater function for the activeTab state
         
         //state which stores the current active folder tab (by its id)
@@ -266,7 +293,7 @@ export default function GivingTool(){
             amount: 0,
             date:"",
             description: "",
-            receipt: null,
+            receipt: {},   // will store the uploaded file object
         });
 
         //handler which runs when user enters a value in the 'amount' column <InputGrouptext> field
@@ -524,10 +551,27 @@ export default function GivingTool(){
                                 </FormGroup>
                             </td>
                             <td>
-                                {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
+                                {/* column 5 displays an 'Upload Receipt' Button which prompts the user to upload a receipt file */}
+                                <Button color="info" onClick={() => openFs()}>
+                                    Upload Receipt
+                                </Button>
+                                {/* NB: this is a hidden <input> element */}
+                                <input
+                                    type="file"
+                                    id="fileInput"
+                                    accept=".pdf,.png,.jpg,.jpeg"
+                                    style={{ display: 'none' }}
+                                    onChange={handleFileChange}
+                                />
+                                {/* display a message when file has been selected */}
+                                {userSelections.receipt.name && (
+                                    <p style={{ fontSize: '0.8rem', marginTop: '5px' }}>
+                                        Selected file: {userSelections.receipt.name}
+                                    </p>
+                                )}
                             </td>
                             <td>
-                                {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
+                                {/* column 6 displays a 'Add New Gift' Button which allows user to submit the new gift details */}
                             </td>
                         </tr>
                     </tbody>
