@@ -214,3 +214,13 @@
 	};
 
 /* END code snippets from ImportData */
+
+// example of a file object
+const file = {
+	name: "receipt.pdf", 
+	lastModified: 1719385372000, 
+	lastModifiedDate: "Fri Jun 21 2024 10:22:52 GMT+1000 (AEST)", 
+	webkitRelativePath: "", 
+	size: 23456, 
+	type: "application/pdf"
+}
