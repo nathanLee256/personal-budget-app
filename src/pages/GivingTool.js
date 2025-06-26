@@ -209,7 +209,7 @@ export default function GivingTool(){
         const onSuggestionSelected = (event, { suggestion }) => {
             setUserSelections(prev => ({
                 ...prev,
-                organisation: suggestion.entityName, abn: suggestion.abn
+                organisation: suggestion.entityName
             }));
         };
         
@@ -260,6 +260,7 @@ export default function GivingTool(){
             if (activeTab !== tab) {
                 setActiveTab(tab);
             }
+            //update a selectedYear state variable here also
         };
 
 
@@ -298,12 +299,11 @@ export default function GivingTool(){
 
         //handler which runs when user enters a value in the 'amount' column <InputGrouptext> field
         const handleAmountChange = (val) => {
-            //udpate the userSelections state
+            const numeric = Number(val); // convert the string input to a number (e.g. "10" → 10)
             setUserSelections((prevState) => ({
                 ...prevState,
-                amount: val
+                amount: isNaN(numeric) ? null : numeric
             }));
-
         };
 
         //handler which runs when the user enters/selects a date in the 'date' column
@@ -322,13 +322,36 @@ export default function GivingTool(){
             }));
 
         }
+
+        //handler which runs when the user has clicked the 'Submit New Gift' Button (after entering new gift details)
+        /* here we need to append the  */
+        const handleSubmit = () => {
+
+        }
+
+        //function which assigns a bool value to the disabled prop of the 'Submit New Gift' Button (to enable/disable it)
+        const shouldDisableSubmit = () => {
+            const { giftType, organisation, amount, date, description, receipt } = userSelections;
+
+            if (
+                giftType === "" ||
+                organisation === "" ||
+                typeof amount !== "number" || isNaN(amount) || amount === 0 ||
+                date === "" ||
+                description.trim() === "" ||
+                !receipt || !receipt.name
+            ) {
+                return true; // disable the button
+            }
+
+            return false; // enable the button
+        };
+
+
     //END state
 
     //START event handlers
-        const addRow = () => {
-            
-        };
-
+        
         //runs when user selects a gift type from column 1 of table (when prompted to enter the dets of a new gift)
         const handleTypeSelect = (type) => {
 
@@ -355,38 +378,36 @@ export default function GivingTool(){
 
     //END handlers
 
-    //START array to be mapped over in the JSX
-        const tabIdArray = ["1","2","3","4","5"];
-    //END array
 
     //START hook to perform fetch request to server to obtain user gifts for selected period
-        /* useEffect(() => {
+        useEffect(() => {
 
             //perform a fetch request to the server to obtain all of the donations the user has made in the selected year
             if (!userId) return; // ✅ Wait until userId is available before making the request
 
-            //next obtain the selected year based on the tab param
+            //next obtain the selected year state (from the current activeTab state which represents a folder tab) 
             let selectedYear = 0;
             let tab = activeTab;
+            const currentYear = new Date().getFullYear();
 
             switch(tab) {
-                case tabIdArray[0]:
+                case 0:
                     // in this case user has selected the current year folder tab
                     selectedYear = currentYear;
                     break;
-                case tabIdArray[1]:
+                case 1:
                     // current year -1
                     selectedYear = currentYear - 1;
                     break;
-                case tabIdArray[2]:
+                case 2:
                     // current year -2
                     selectedYear = currentYear - 2;
                     break;
-                case tabIdArray[3]:
+                case 3:
                     // current year -3
                     selectedYear = currentYear - 3;
                     break;
-                case tabIdArray[4]:
+                case 4:
                     // current year -4
                     selectedYear = currentYear - 4;
                     break;
@@ -418,17 +439,19 @@ export default function GivingTool(){
                 console.error("Error:", error);
             });
 
-        }, [activeTab]); */    //runs once when the component mounts (activeTab == currentYear), and then everytime user toggles another tab
+        }, [activeTab]);     //runs once when the component mounts (activeTab == currentYear), and then everytime user toggles another tab
 
 
     //END hook
+
+    
 
     //START helper functions to render the JSX for the table headers/rows
 
         //function which returns the JSX representing the table headers
         const renderTableHeaders = () => {
         
-            const totalColumns = 7;
+            const totalColumns = 6;
             
             const rowArray = new Array(5).fill(""); // Initialize an array to define 5 table columns with strings
             rowArray[0] = "Gift Type";
@@ -436,11 +459,10 @@ export default function GivingTool(){
             rowArray[2] = "Amount";
             rowArray[3] = "Date";
             rowArray[4] = "Description";
-            rowArray[5] = "Receipt";
-            rowArray[totalColumns - 1] = "Delete";
+            rowArray[totalColumns - 1] = "Receipt";
 
             // Define widths for each column
-            const columnWidths = ["15%", "15%", "10%", "15%", "15%","15%","15%"];
+            const columnWidths = ["15%", "20%", "10%", "15%", "25%","15%"];
         
             return (
                 <thead>
@@ -570,9 +592,7 @@ export default function GivingTool(){
                                     </p>
                                 )}
                             </td>
-                            <td>
-                                {/* column 6 displays a 'Add New Gift' Button which allows user to submit the new gift details */}
-                            </td>
+                            
                         </tr>
                     </tbody>
                     
@@ -642,10 +662,18 @@ export default function GivingTool(){
                                     <>
                                         <h3>New Gift</h3>
                                         <p>Enter gift details below:</p>
-                                        <StyledTable borderless>
+                                        <StyledTable>
                                             {renderTableHeaders()}
                                             {renderTableRows("bottom")}
                                         </StyledTable>
+                                        <Button 
+                                            color="primary" 
+                                            size='lg'
+                                            disabled={shouldDisableSubmit()} // clear and accurate
+                                            onClick={()=> handleSubmit()}
+                                        >
+                                            Submit New Gift
+                                        </Button>
                                     </> : 
                                     <></> 
                                 }   
