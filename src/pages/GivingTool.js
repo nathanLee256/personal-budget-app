@@ -292,7 +292,7 @@ export default function GivingTool(){
             giftType: "",
             organisation: "",
             amount: 0,
-            date:"",
+            date:"",    //e.g. "2025-06-27"
             description: "",
             receipt: {},   // will store the uploaded file object
         });
@@ -315,6 +315,7 @@ export default function GivingTool(){
             }));
         };
 
+        //handler which runs when user enters a description in the 'description' column of bottom table
         const handleDescriptionChange = (text) => {
             setUserSelections((prevState) => ({
                 ...prevState,
@@ -324,14 +325,52 @@ export default function GivingTool(){
         }
 
         //handler which runs when the user has clicked the 'Submit New Gift' Button (after entering new gift details)
-        /* here we need to append the  */
-        const handleSubmit = () => {
+        const handleSubmit = async (e) => {
 
-        }
+            const url = 'http://localhost:3001/gifts/update_gift_items';
+            e.preventDefault(); // Prevent default form submission behavior
+
+            //here we need to send the current userSelections data a POST request to the server
+            //construct a payload
+            const payload = {
+                UserId: userId,
+                NewGift: userSelections
+            };
+
+            //check the payload
+            console.log('Update route payload:',payload);
+
+            //perform the POST
+            try{
+                // Perform the POST request
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type': 'application/json', // Set the content type to JSON
+                    },
+                    body: JSON.stringify(payload), // Convert the payload to JSON string
+                });
+
+                // Handle the server response
+                if (response.ok) {
+                    const updatedData = await response.json();
+                    console.log('Database updated successfully:', updatedData);
+                    
+                    //update userGifts
+                    //setUserGifts(updatedData.UserGifts);
+                } else {
+                    console.error('Server responded with an error:', response.status);
+                }
+
+            }catch(error){
+
+            }
+        };
 
         //function which assigns a bool value to the disabled prop of the 'Submit New Gift' Button (to enable/disable it)
         const shouldDisableSubmit = () => {
             const { giftType, organisation, amount, date, description, receipt } = userSelections;
+            console.log("Date:",date);
 
             if (
                 giftType === "" ||
@@ -416,7 +455,7 @@ export default function GivingTool(){
             }
 
             //perform fetch request (HTTP-GET) to the server route, send it the userId and selectedYear
-            const url = `http://localhost:3001/giving_tool/retrieve_gift_items?UserId=${userId}&Year=${selectedYear}`;
+            const url = `http://localhost:3001/gifts/retrieve_gift_items?UserId=${userId}&Year=${selectedYear}`;
             
             fetch(url, {
                 method: "GET",
@@ -426,14 +465,19 @@ export default function GivingTool(){
             })
 
             // set up the Promise chain
+            //first check the res.ok property 
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
                 return response.json();
             })
+
+            //if this runs it means we have received a 200 OK response and the Promise has resolved to the JSON returned from the server
             .then(data => {
                 //update userGifts array with server (data)
+                setUserGifts(data.userGifts); //will assign an empty array if no gifts were found in database
+            
             })
             .catch(error => {
                 console.error("Error:", error);
@@ -449,7 +493,9 @@ export default function GivingTool(){
     //START helper functions to render the JSX for the table headers/rows
 
         //function which returns the JSX representing the table headers
-        const renderTableHeaders = () => {
+        const renderTableHeaders = (position) => {
+
+            /* This function returns a different set of JSX depending on the position param (e.g. "top", or "bottom") */
         
             const totalColumns = 6;
             
@@ -462,17 +508,37 @@ export default function GivingTool(){
             rowArray[totalColumns - 1] = "Receipt";
 
             // Define widths for each column
-            const columnWidths = ["15%", "20%", "10%", "15%", "25%","15%"];
-        
-            return (
-                <thead>
-                    <tr>
-                        {rowArray.map((val, index) => (
-                            <th key={index} style={{ width: columnWidths[index] }}>{ val }</th>
-                        ))}
-                    </tr>
-                </thead>
-            );
+            const columnWidthsBottom = ["15%", "20%", "10%", "15%", "25%","15%"];
+            const columnWidthsTop = ["15%", "15%", "15%", "15%", "15%","15%", "10%"];
+
+            if(position === "top"){
+                //if T it means userGifts is truthy and we need to render historical gifts for selectedYear
+                // which means we need to render an additional column for the top table
+                return (
+                    <thead>
+                        <tr>
+                            {rowArray.map((val, index) => (
+                                <th key={index} style={{ width: columnWidthsTop[index]}}>{ val }</th>
+                            ))}
+                            {/* render an additional column for the top */}
+                            <th key={totalColumns} style={{ width: columnWidthsTop[totalColumns]}}>Tax Deductable</th>
+                        </tr>
+                    </thead>
+                );
+
+            }else{
+                //runs when position !== "top", in which case we render only 6 column headers to be displayed in bottom table
+                return (
+                    <thead>
+                        <tr>
+                            {rowArray.map((val, index) => (
+                                <th key={index} style={{ width: columnWidthsBottom[index]}}>{ val }</th>
+                            ))}
+                            
+                        </tr>
+                    </thead>
+                );
+            } 
         };
 
         //function which returns the JSX representing the table rows
@@ -648,7 +714,7 @@ export default function GivingTool(){
                                     Array.isArray(userGifts) && userGifts.length > 0 ? 
                                     <>
                                         <StyledTable borderless>
-                                            {renderTableHeaders()}
+                                            {renderTableHeaders("top")}
                                             {renderTableRows("top")}
                                         </StyledTable>
                                     </> : 
@@ -663,7 +729,7 @@ export default function GivingTool(){
                                         <h3>New Gift</h3>
                                         <p>Enter gift details below:</p>
                                         <StyledTable>
-                                            {renderTableHeaders()}
+                                            {renderTableHeaders("bottom")}
                                             {renderTableRows("bottom")}
                                         </StyledTable>
                                         <Button 
