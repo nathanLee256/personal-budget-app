@@ -11,6 +11,10 @@ import {
     InputGroupText,
     Label,
     Table as ReactstrapTable,
+    Modal,
+    ModalBody,
+    ModalFooter,
+    ModalHeader,
     Nav,
     NavItem,
     NavLink,
@@ -107,6 +111,19 @@ export default function GivingTool(){
         const columnIDs = ["columnOne", "columnTwo"];
 
     //END state 
+
+    //START state variable and toggler function for the modal which displays to confirm the submission of a new item
+        //stores the state of the modal (open/closed)
+        const[confirmNewgiftModal, setConfirmNewgiftModal] = useState(false);
+
+        //function which opens/closes modal (by reversing the modal state)
+        const modalToggle = () => {
+            setConfirmNewgiftModal((prevState) => !prevState);
+        };
+        
+        //also create a reference variable to cache the userSelections state to handle the async code in the confirm button onClick
+        const cachedUserSelections = useRef(null);
+    //END state
 
     //START state variables and handlers/helpers for the autosuggest functionality
 
@@ -294,7 +311,7 @@ export default function GivingTool(){
             amount: 0,
             date:"",    //e.g. "2025-06-27"
             description: "",
-            receipt: {},   // will store the uploaded file object
+            receipt: null,   // will store the uploaded file object
         });
 
         //handler which runs when user enters a value in the 'amount' column <InputGrouptext> field
@@ -325,16 +342,15 @@ export default function GivingTool(){
         }
 
         //handler which runs when the user has clicked the 'Submit New Gift' Button (after entering new gift details)
-        const handleSubmit = async (e) => {
+        const handleSubmit = async (selectionsCopy) => {
 
             const url = 'http://localhost:3001/gifts/update_gift_items';
-            e.preventDefault(); // Prevent default form submission behavior
 
             //here we need to send the current userSelections data a POST request to the server
             //construct a payload
             const payload = {
                 UserId: userId,
-                NewGift: userSelections
+                NewGift: selectionsCopy.current
             };
 
             //check the payload
@@ -357,20 +373,21 @@ export default function GivingTool(){
                     console.log('Database updated successfully:', updatedData);
                     
                     //update userGifts
-                    //setUserGifts(updatedData.UserGifts);
+                    setUserGifts(updatedData.UserGifts);
+
                 } else {
                     console.error('Server responded with an error:', response.status);
                 }
 
             }catch(error){
-
+                console.error('Fetch error:', error);
             }
         };
 
         //function which assigns a bool value to the disabled prop of the 'Submit New Gift' Button (to enable/disable it)
         const shouldDisableSubmit = () => {
             const { giftType, organisation, amount, date, description, receipt } = userSelections;
-            console.log("Date:",date);
+            console.log("userSelections:",userSelections);
 
             if (
                 giftType === "" ||
@@ -652,7 +669,7 @@ export default function GivingTool(){
                                     onChange={handleFileChange}
                                 />
                                 {/* display a message when file has been selected */}
-                                {userSelections.receipt.name && (
+                                {userSelections.receipt?.name && (
                                     <p style={{ fontSize: '0.8rem', marginTop: '5px' }}>
                                         Selected file: {userSelections.receipt.name}
                                     </p>
@@ -736,7 +753,7 @@ export default function GivingTool(){
                                             color="primary" 
                                             size='lg'
                                             disabled={shouldDisableSubmit()} // clear and accurate
-                                            onClick={()=> handleSubmit()}
+                                            onClick={()=> modalToggle()}
                                         >
                                             Submit New Gift
                                         </Button>
@@ -747,6 +764,61 @@ export default function GivingTool(){
                         ))
                     }
                 </TabContent>
+                {/* Modal JSX */}
+                <div>
+                    <Modal isOpen={confirmNewgiftModal} toggle={modalToggle}>
+                        <ModalHeader toggle={modalToggle}>Confirm New Gift?</ModalHeader>
+                        <ModalBody>
+                            Are you sure you want to add this new gift/donation?
+                            <br/>
+                            {
+                                Object.entries(userSelections).map(([key, val]) => (
+                                    <div key={key}>
+                                        <em>{key}:</em> {val instanceof File ? val.name : String(val)}
+                                    </div>
+                                ))
+                            }
+                        </ModalBody>
+                        <ModalFooter>
+                            <Button
+                                color="success"
+                                onClick={() => {
+
+                                    //first cache the current userSelections state
+                                    cachedUserSelections.current = userSelections;
+
+                                    handleSubmit(cachedUserSelections); // 🔄 Start async in background
+
+                                    //reset state
+                                    setUserSelections({
+                                        giftType: "",
+                                        organisation: "",
+                                        amount: 0,
+                                        date: "",
+                                        description: "",
+                                        receipt: null,
+                                    });
+
+                                    //also reset orgValue
+                                    setOrgValue('');
+
+                                    //close modal
+                                    modalToggle();
+
+                                }}
+                            >
+                                Confirm
+                            </Button>
+                            <Button color="danger" onClick={()=> {
+                                //close modal but don't reset state
+                                modalToggle();
+                            }}>
+                                Cancel
+                            </Button>
+                        </ModalFooter>
+
+                    </Modal>
+                </div>
             </StyledContainer>
         </SubWrapper>
     );
