@@ -207,7 +207,7 @@ export default function GivingTool(){
             const inputLength = inputValue.length;
 
             const filtered = inputLength === 0 ? [] : orgList.filter(org =>
-                org.entityName.toLowerCase().includes(inputValue)
+                org?.entityName.toLowerCase().includes(inputValue)
             );
 
             const limited = filtered.slice(0, 10); // only show top 10 matches
@@ -265,29 +265,34 @@ export default function GivingTool(){
             //1- send to server 
             const url = 'http://localhost:3001/gifts/upload_receipt';
 
-
+            
             try{
                 const uploadResponse = await fetch(url,{
                     method: "POST",
                     body: formData,
                 })
 
-                const { fileUrl } = await uploadResponse.json();
-                //expected response: { "fileUrl": "/uploads/receipts/myfile.pdf" }
+                if (!uploadResponse.ok) {
+                    console.error(`Server error: ${uploadResponse.status}`);
+                    return;
+                }
 
-                //2- update state
-                if (selectedFile) {
+                const { fileUrl } = await uploadResponse.json();
+
+                //2-update state
+                if (fileUrl) {
                     setUserSelections((prevState) => ({
                         ...prevState,
-                        receipt: fileUrl
+                        receipt: fileUrl,
                     }));
+                } else {
+                    console.error("Upload succeeded but no fileUrl returned!");
                 }
 
             }catch(error){
                 console.error('Fetch error to the upload_receipt route:', error);
             }
 
-            
         };
         
         
@@ -819,7 +824,7 @@ export default function GivingTool(){
                                 <em>gift type: </em>{userSelections.giftType}
                             </div>
                             <div>
-                                <em>organisation: </em>{userSelections.organisation.entityName}
+                                <em>Organisation:</em> {userSelections.organisation?.entityName || "—"}
                             </div>
                             {
                                 Object.entries(userSelections).map(([key, val], index) => {
