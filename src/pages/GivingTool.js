@@ -169,8 +169,8 @@ export default function GivingTool(){
                         data = {
                             "IsData": true,
                             "Organisations" : [
-                                {"entityName": "Salvation Army", "abn": 1234567},
-                                {"entityName": "Red Cross", "abn": 2345678}
+                                {"entityName": "Salvation Army", "abn": 1234567, "orgId": 1},
+                                {"entityName": "Red Cross", "abn": 2345678, "orgId": 2}
                             ]
                         }
                      */
@@ -226,7 +226,7 @@ export default function GivingTool(){
         const onSuggestionSelected = (event, { suggestion }) => {
             setUserSelections(prev => ({
                 ...prev,
-                organisation: suggestion.entityName
+                organisation: suggestion
             }));
         };
         
@@ -250,15 +250,44 @@ export default function GivingTool(){
         };
 
         //2- handler is called automatically when user has selected a file from fs
-        // It receives the file object (event.target.files[0]), and uses it to update the userSelections state obj
-        const handleFileChange = (event) => {
+        /* 
+            0-It receives the file object (event.target.files[0]), and 1-sends it to the server in a POST request.
+            The server stores the file in its /uploads folder, and then returns the url path of the saved file.
+            2-The url path then is used to update the userSelections.file
+        */
+        const handleFileChange = async (event) => {
+
+            //0- extract the file obj (the user selected file) from the DOM, store it in formData object
             const selectedFile = event.target.files[0];
-            if (selectedFile) {
-                setUserSelections((prevState) => ({
-                    ...prevState,
-                    receipt: selectedFile
-                }));
+            const formData = new FormData();
+            formData.append("receipt", selectedFile);
+
+            //1- send to server 
+            const url = 'http://localhost:3001/gifts/upload_receipt';
+
+
+            try{
+                const uploadResponse = await fetch(url,{
+                    method: "POST",
+                    body: formData,
+                })
+
+                const { fileUrl } = await uploadResponse.json();
+                //expected response: { "fileUrl": "/uploads/receipts/myfile.pdf" }
+
+                //2- update state
+                if (selectedFile) {
+                    setUserSelections((prevState) => ({
+                        ...prevState,
+                        receipt: fileUrl
+                    }));
+                }
+
+            }catch(error){
+                console.error('Fetch error to the upload_receipt route:', error);
             }
+
+            
         };
         
         
@@ -307,11 +336,11 @@ export default function GivingTool(){
     //START state object to store user selections: will be used to append new object to userGifts when user has entered all data
         const [userSelections, setUserSelections] = useState({
             giftType: "",
-            organisation: "",
+            organisation: null, //will store an {organisation} object with entityName, abn, and orgId properties
             amount: 0,
             date:"",    //e.g. "2025-06-27"
             description: "",
-            receipt: null,   // will store the uploaded file object
+            receipt: "",   // will store the url string where the file is stored on server
         });
 
         //handler which runs when user enters a value in the 'amount' column <InputGrouptext> field
@@ -381,6 +410,20 @@ export default function GivingTool(){
 
             }catch(error){
                 console.error('Fetch error:', error);
+            }finally{ //contains code which runs after Promise has either resolved (try runs), or rejected (catch runs)
+
+                //reset state
+                setUserSelections({
+                    giftType: "",
+                    organisation: null,
+                    amount: 0,
+                    date: "",
+                    description: "",
+                    receipt: "",
+                });
+
+                //also reset orgValue
+                setOrgValue('');
             }
         };
 
@@ -391,11 +434,11 @@ export default function GivingTool(){
 
             if (
                 giftType === "" ||
-                organisation === "" ||
+                !organisation || !organisation.entityName ||
                 typeof amount !== "number" || isNaN(amount) || amount === 0 ||
                 date === "" ||
                 description.trim() === "" ||
-                !receipt || !receipt.name
+                receipt === ""
             ) {
                 return true; // disable the button
             }
@@ -477,7 +520,7 @@ export default function GivingTool(){
             fetch(url, {
                 method: "GET",
                 headers: {
-                "Accept": "application/json"
+                    "Accept": "application/json"
                 },
             })
 
@@ -669,9 +712,9 @@ export default function GivingTool(){
                                     onChange={handleFileChange}
                                 />
                                 {/* display a message when file has been selected */}
-                                {userSelections.receipt?.name && (
+                                {userSelections.receipt && (
                                     <p style={{ fontSize: '0.8rem', marginTop: '5px' }}>
-                                        Selected file: {userSelections.receipt.name}
+                                        Selected file: {userSelections.receipt}
                                     </p>
                                 )}
                             </td>
@@ -769,14 +812,26 @@ export default function GivingTool(){
                     <Modal isOpen={confirmNewgiftModal} toggle={modalToggle}>
                         <ModalHeader toggle={modalToggle}>Confirm New Gift?</ModalHeader>
                         <ModalBody>
-                            Are you sure you want to add this new gift/donation?
+                            <p>Are you sure you want to add this new gift/donation?</p>
+
                             <br/>
+                            <div>
+                                <em>gift type: </em>{userSelections.giftType}
+                            </div>
+                            <div>
+                                <em>organisation: </em>{userSelections.organisation.entityName}
+                            </div>
                             {
-                                Object.entries(userSelections).map(([key, val]) => (
-                                    <div key={key}>
-                                        <em>{key}:</em> {val instanceof File ? val.name : String(val)}
-                                    </div>
-                                ))
+                                Object.entries(userSelections).map(([key, val], index) => {
+                                    const TWO = 2;
+                                    if(index < TWO) return null; //skip the first 2 object properties
+
+                                    return(
+                                        <div key={key}>
+                                            <em>{key}: </em> {val instanceof File ? val.name : String(val)}
+                                        </div>
+                                    )
+                                })
                             }
                         </ModalBody>
                         <ModalFooter>
@@ -788,19 +843,6 @@ export default function GivingTool(){
                                     cachedUserSelections.current = userSelections;
 
                                     handleSubmit(cachedUserSelections); // 🔄 Start async in background
-
-                                    //reset state
-                                    setUserSelections({
-                                        giftType: "",
-                                        organisation: "",
-                                        amount: 0,
-                                        date: "",
-                                        description: "",
-                                        receipt: null,
-                                    });
-
-                                    //also reset orgValue
-                                    setOrgValue('');
 
                                     //close modal
                                     modalToggle();
