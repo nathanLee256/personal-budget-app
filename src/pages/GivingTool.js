@@ -396,7 +396,7 @@ export default function GivingTool(){
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: {
-                    'Content-Type': 'application/json', // Set the content type to JSON
+                        'Content-Type': 'application/json', // Set the content type to JSON
                     },
                     body: JSON.stringify(payload), // Convert the payload to JSON string
                 });
