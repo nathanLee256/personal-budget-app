@@ -279,7 +279,7 @@ export default function GivingTool(){
 
                 const { fileUrl } = await uploadResponse.json();
 
-                //2-update state
+                //2-update userSelections.receipt with the url
                 if (fileUrl) {
                     setUserSelections((prevState) => ({
                         ...prevState,
