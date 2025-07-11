@@ -336,6 +336,20 @@ export default function GivingTool(){
     //START state variable to store the user's donations (array of gift objects) returned from the server
         //initialise as an empty array
         const [userGifts, setUserGifts] = useState([]);
+
+        //gift objects are in the following form (this is the JSON returned from the server in the gifts/retrieve_gift_items route):
+        /* 
+            {
+                "id": 1,
+                "giftType": "Charitable Donation",
+                "organisation": 2384,
+                "amount": "50.00",
+                "date": "2025-06-29T14:00:00.000Z",
+                "description": "red shield",
+                "receipt": null,
+                "dgr": 1
+            }, 
+        */
     //END state
 
     //START state object to store user selections: will be used to append new object to userGifts when user has entered all data
@@ -654,7 +668,7 @@ export default function GivingTool(){
                                         {   giftObj.dgr === 1 ? "Yes": "No" }
                                     </td>
                                     <td>
-                                        
+
                                     </td>
                                     
                                 </tr>
