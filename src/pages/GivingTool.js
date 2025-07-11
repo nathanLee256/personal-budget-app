@@ -548,7 +548,7 @@ export default function GivingTool(){
                 console.error("Error:", error);
             });
 
-        }, [activeTab]);     //runs once when the component mounts (activeTab == currentYear), and then everytime user toggles another tab
+        }, [activeTab, userId]);     //runs once when the component mounts (activeTab == currentYear), and then everytime user toggles another tab
 
 
     //END hook
@@ -574,7 +574,7 @@ export default function GivingTool(){
 
             // Define widths for each column
             const columnWidthsBottom = ["15%", "20%", "10%", "15%", "25%","15%"];
-            const columnWidthsTop = ["15%", "15%", "15%", "15%", "15%","15%", "10%"];
+            const columnWidthsTop = ["5%","15%", "10%", "10%", "15%", "15%","10%", "10%", "10%"];
 
             if(position === "top"){
                 //if T it means userGifts is truthy and we need to render historical gifts for selectedYear
@@ -582,11 +582,15 @@ export default function GivingTool(){
                 return (
                     <thead>
                         <tr>
+                            {/* render an id column for the top table */}
+                            <th style={{ width: columnWidthsTop[0]}}>Gift ID</th>
                             {rowArray.map((val, index) => (
                                 <th key={index} style={{ width: columnWidthsTop[index]}}>{ val }</th>
                             ))}
                             {/* render an additional column for the top */}
                             <th key={totalColumns} style={{ width: columnWidthsTop[totalColumns]}}>Tax Deductable</th>
+                            {/* also render a column for a delete button */}
+                            <th style={{ width: columnWidthsTop[8]}}>Delete</th>
                         </tr>
                     </thead>
                 );
@@ -613,8 +617,50 @@ export default function GivingTool(){
                 //if this evals as T it means the collapse is not open in which case we just need to render the JSX above button
                 //iterate (map) over the userGifts array and display each object in the array in a single table row
                 return(
-                    <>
-                    </>
+                    <tbody>
+                        {
+                            userGifts.map((giftObj, index) => (
+                                <tr>
+                                    <td>
+                                        {/* Column 0 displays gift id */}
+                                        {giftObj.id}
+                                    </td>
+                                    <td>
+                                        {/* Column 1 displays giftType */}
+                                        {giftObj.giftType}
+                                    </td>
+                                    <td>
+                                        {/* Column 2 displays organisation*/}
+                                        {giftObj.organisation}
+                                    </td>
+                                    <td>
+                                        {/* Column 3 displays amount*/}
+                                        {giftObj.amount}
+                                    </td>
+                                    <td>
+                                        {/* Column 4 displays date*/}
+                                        {giftObj.date}
+                                    </td>
+                                    <td>
+                                        {/* Column 5 displays description*/}
+                                        {giftObj.description}
+                                    </td>
+                                    <td>
+                                        {/* Column 6 displays receipt*/}
+                                        {giftObj.receipt}
+                                    </td>
+                                    <td>
+                                        {/* Column 7 displays tax*/}
+                                        {   giftObj.dgr === 1 ? "Yes": "No" }
+                                    </td>
+                                    <td>
+                                        
+                                    </td>
+                                    
+                                </tr>
+                            ))
+                        }
+                    </tbody>
                     
                 );
             }else{
@@ -778,7 +824,7 @@ export default function GivingTool(){
                                 {
                                     Array.isArray(userGifts) && userGifts.length > 0 ? 
                                     <>
-                                        <StyledTable borderless>
+                                        <StyledTable>
                                             {renderTableHeaders("top")}
                                             {renderTableRows("top")}
                                         </StyledTable>
