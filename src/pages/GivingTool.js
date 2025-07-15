@@ -255,6 +255,11 @@ export default function GivingTool(){
             The server stores the file in its /uploads folder, and then returns the url path of the saved file.
             2-The url path then is used to update the userSelections.file
         */
+
+        //START reference variable to store the file <input> element in the DOM
+            const fileInputRef = useRef(null);
+
+        //END reference
         const handleFileChange = async (event) => {
 
             //0- extract the file obj (the user selected file) from the DOM, store it in formData object
@@ -390,7 +395,7 @@ export default function GivingTool(){
         }
 
         //handler which runs when the user has clicked the 'Submit New Gift' Button (after entering new gift details)
-        const handleSubmit = async (selectionsCopy) => {
+        const handleSubmit = async () => {
 
             const url = 'http://localhost:3001/gifts/update_gift_items';
 
@@ -398,7 +403,7 @@ export default function GivingTool(){
             //construct a payload
             const payload = {
                 UserId: userId,
-                NewGift: selectionsCopy.current
+                NewGift: userSelections
             };
 
             //check the payload
@@ -421,7 +426,7 @@ export default function GivingTool(){
                     console.log('Database updated successfully:', updatedData);
                     
                     //update userGifts
-                    setUserGifts(updatedData.UserGifts);
+                    setUserGifts(updatedData);
 
                 } else {
                     console.error('Server responded with an error:', response.status);
@@ -443,6 +448,11 @@ export default function GivingTool(){
 
                 //also reset orgValue
                 setOrgValue('');
+
+                //reset the file input ref variable
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = null;
+                }
             }
         };
 
@@ -775,6 +785,7 @@ export default function GivingTool(){
                                     accept=".pdf,.png,.jpg,.jpeg"
                                     style={{ display: 'none' }}
                                     onChange={handleFileChange}
+                                    ref={fileInputRef}
                                 />
                                 {/* display a message when file has been selected */}
                                 {userSelections.receipt && (
@@ -905,9 +916,9 @@ export default function GivingTool(){
                                 onClick={() => {
 
                                     //first cache the current userSelections state
-                                    cachedUserSelections.current = userSelections;
+                                    //cachedUserSelections.current = userSelections;
 
-                                    handleSubmit(cachedUserSelections); // 🔄 Start async in background
+                                    handleSubmit(); // 🔄 Start async in background
 
                                     //close modal
                                     modalToggle();
