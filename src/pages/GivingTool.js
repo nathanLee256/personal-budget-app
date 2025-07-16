@@ -504,6 +504,36 @@ export default function GivingTool(){
             }));
         };
 
+        //event handler for the 'delete' buttons in the final column of top table
+        /* 
+            function does 2 things: 1- removes the selected giftObj from the userGifts array. 2- perform a HTTP DELETE request
+            to the server route, which deletes a row of data from the gift_items table (it doesn't return the updated table).
+        */
+        const handleDelete = async (rowIndex, giftID) => {
+            // 1. Optimistically remove from UI
+            setUserGifts((prevState) => {
+                const updatedArr = prevState.filter((_, i) => i !== rowIndex);
+                return updatedArr;
+            });
+
+            // 2. Send DELETE request to server
+            const url = `http://localhost:3001/gifts/delete_gift/${giftID}`;
+
+            try {
+                const deleteResponse = await fetch(url, {
+                    method: "DELETE",
+                });
+
+                if (!deleteResponse.ok) {
+                    throw new Error(`Server responded with ${deleteResponse.status}`); // ✅ fix: was 'response.status'
+                }
+
+            } catch (error) {
+                console.error('Fetch error to the delete_gift route:', error);
+                // Optional: revert UI change if delete fails
+            }
+        };
+
     //END handlers
 
 
@@ -678,7 +708,8 @@ export default function GivingTool(){
                                         {   giftObj.dgr === 1 ? "Yes": "No" }
                                     </td>
                                     <td>
-
+                                        {/* Render a Delete Button */}
+                                        <Button  key={giftObj.id} color="danger" onClick={() => handleDelete(index)}>-delete item</Button>
                                     </td>
                                     
                                 </tr>
