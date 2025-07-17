@@ -510,12 +510,7 @@ export default function GivingTool(){
             to the server route, which deletes a row of data from the gift_items table (it doesn't return the updated table).
         */
         const handleDelete = async (rowIndex, giftID) => {
-            // 1. Optimistically remove from UI
-            setUserGifts((prevState) => {
-                const updatedArr = prevState.filter((_, i) => i !== rowIndex);
-                return updatedArr;
-            });
-
+            
             // 2. Send DELETE request to server
             const url = `http://localhost:3001/gifts/delete_gift/${giftID}`;
 
@@ -524,14 +519,25 @@ export default function GivingTool(){
                     method: "DELETE",
                 });
 
-                if (!deleteResponse.ok) {
+                // Handle the server response
+                if (deleteResponse.ok) {
+                    const responseString = await deleteResponse.json();
+                    console.log(responseString);
+
+                    // 1 update userGifts and top table rendering only after successful deletion to ensure userGifts reflects db
+                    setUserGifts((prevState) => {
+                        const updatedArr = prevState.filter((_, i) => i !== rowIndex);
+                        return updatedArr;
+                    });
+                    
+                } else {
                     throw new Error(`Server responded with ${deleteResponse.status}`); // ✅ fix: was 'response.status'
-                }
+                };
 
             } catch (error) {
                 console.error('Fetch error to the delete_gift route:', error);
                 // Optional: revert UI change if delete fails
-            }
+            };
         };
 
     //END handlers
@@ -709,7 +715,7 @@ export default function GivingTool(){
                                     </td>
                                     <td>
                                         {/* Render a Delete Button */}
-                                        <Button  key={giftObj.id} color="danger" onClick={() => handleDelete(index)}>-delete item</Button>
+                                        <Button  key={giftObj.id} color="danger" onClick={() => handleDelete(index, giftObj.id)}>-delete item</Button>
                                     </td>
                                     
                                 </tr>
