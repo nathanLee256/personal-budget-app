@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import React from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
     Button,
+    collapse,
     Dropdown,
     DropdownToggle,
     DropdownMenu,
@@ -20,6 +22,7 @@ import {
     NavLink,
     TabContent,
     TabPane,
+    Collapse,
   } from 'reactstrap';
 import styled from 'styled-components';
 import { useAuth } from '../components/AuthContext.js';
@@ -53,6 +56,25 @@ export default function GivingTool(){
 
     //END retrieve
 
+    //START state variable to store the user's donations (array of gift objects) returned from the server
+        //initialise as an empty array
+        const [userGifts, setUserGifts] = useState([]);
+
+        //gift objects are in the following form (this is the JSON returned from the server in the gifts/retrieve_gift_items route):
+        /* 
+            {
+                "id": 1,
+                "giftType": "Charitable Donation",
+                "organisation": 2384,
+                "amount": "50.00",
+                "date": "2025-06-29T14:00:00.000Z",
+                "description": "red shield",
+                "receipt": null,
+                "dgr": 1
+            }, 
+        */
+    //END state
+
     //START Collapse state and toggler function
 
         //state variable which stores the isOpen state (true/false) of the Collapse
@@ -60,6 +82,52 @@ export default function GivingTool(){
 
         //toggler function which runs when user clicks Collapse button and reverses the isOPen state of the Collapse
         const collapseToggle = () => setAddgiftCollapse(!addgiftCollapse);
+
+        //state object to store the state (open/closed) of 12 Collapse elements (1 for each month)
+        const[monthCollapses, setMonthCollapses] = useState({
+            January: false,     //initialise each collapse to false (closed)
+            February: false,
+            March: false,
+            April: false,
+            May: false,
+            June: false,
+            July: false,
+            August: false,
+            September: false,
+            October: false,
+            November: false,
+            December: false
+        });
+
+        //event handler function runs when the user clicks a specific Collpase element. When they do, an string value is passed to the 
+        //function which corresponds to the property in the collapses object which stores the open/closed state for that element
+        // The result is that only the targeted Collapse element's state is updated, while the other properties remain unchanged
+        const handleMonthCollapse = (key) => {
+            setMonthCollapses((prev) => ({ // prev is the current state object before the update
+                ...prev,                // the spread operator copies the current state object properties, and then..
+                [key]: !prev[key],      // Updates the specified key
+            }));
+        };
+
+        //useMemo hook
+        const giftsByMonth = useMemo(() => {
+            //debug statement to evaluate time complexity
+            console.log("🧠 useMemo recalculating giftsByMonth...");
+            const grouped = {};
+
+            userGifts.forEach((gift) => {
+                const date = new Date(gift.date);
+                const month = date.getMonth(); // 0 = Jan
+
+                if (!grouped[month]) {
+                    grouped[month] = [];
+                }
+
+                grouped[month].push(gift);
+            });
+
+            return grouped;
+        }, [userGifts]);
 
     //END Collapse 
 
@@ -338,24 +406,7 @@ export default function GivingTool(){
 
     //END state variable
 
-    //START state variable to store the user's donations (array of gift objects) returned from the server
-        //initialise as an empty array
-        const [userGifts, setUserGifts] = useState([]);
-
-        //gift objects are in the following form (this is the JSON returned from the server in the gifts/retrieve_gift_items route):
-        /* 
-            {
-                "id": 1,
-                "giftType": "Charitable Donation",
-                "organisation": 2384,
-                "amount": "50.00",
-                "date": "2025-06-29T14:00:00.000Z",
-                "description": "red shield",
-                "receipt": null,
-                "dgr": 1
-            }, 
-        */
-    //END state
+    
 
     //START state object to store user selections: will be used to append new object to userGifts when user has entered all data
         const [userSelections, setUserSelections] = useState({
@@ -671,7 +722,7 @@ export default function GivingTool(){
         };
 
         //function which returns the JSX representing the table rows
-        const renderTableRows = (position) => { 
+        const renderTableRows = (position, filteredGifts) => { 
 
             if(position === "top"){
                 //if this evals as T it means the collapse is not open in which case we just need to render the JSX above button
@@ -679,8 +730,8 @@ export default function GivingTool(){
                 return(
                     <tbody>
                         {
-                            userGifts.map((giftObj, index) => (
-                                <tr>
+                            filteredGifts.map((giftObj, index) => (
+                                <tr key={giftObj.id}>
                                     <td>
                                         {/* Column 0 displays gift id */}
                                         {giftObj.id}
@@ -840,6 +891,79 @@ export default function GivingTool(){
                
         };
 
+        //function which returns the JSX contained within Collapse components
+        const renderCollapseContent = (mnthIndex, yrIndex) => { 
+
+            
+
+            /* 
+                the first thing we will need to do here is filter the userGifts state array to create a new array
+                which contains only the gift objects for the selected month/year
+            */
+
+            /* let filteredArr = [];
+            userGifts.forEach((gift) => {
+                //extract the date and month from the gift obj
+                const date = new Date(gift.date);
+                const month = date.getUTCMonth();
+
+                //debug statement
+                console.log(
+                    `Gift ID: ${gift.id} | Raw Date: ${gift.date} | Parsed Month: ${month} (0=Jan)`
+                );
+
+                //if the month of gift is equal to the mnthIndex (of the Collapse), add the gift to the filtered array
+                if(month === mnthIndex){
+                    filteredArr.push(gift);
+                }
+            }); */
+
+            // the commented out code above works but results in iterating over userGifts repeatedly (everytime react re-renders page)
+            // to reduce the time-complexity, we can use useMemo instead. The code below does the same thing at far less cost
+            const filteredArr = giftsByMonth[mnthIndex] || [];
+
+            
+
+            //now we are ready to return JSX: render the historical gifts (table headers and data rows) if userGifts is truthy
+            return(
+                <>
+                    {
+                        Array.isArray(filteredArr) && filteredArr.length > 0 ? 
+                        <>
+                            <StyledTable>
+                                {renderTableHeaders("top")}
+                                {renderTableRows("top", filteredArr)}
+                            </StyledTable>
+                        </> : 
+                        <>
+                            <p>No gifts for selected period</p>
+                        </>
+                    }
+                    {/* render the prompt to enter new gift for the 2025 folder tab */}
+                    { 
+                        yrIndex === 0 ? 
+                        <>
+                            <h3>New Gift</h3>
+                            <p>Enter gift details below:</p>
+                            <StyledTable>
+                                {renderTableHeaders("bottom")}
+                                {renderTableRows("bottom", filteredArr)}
+                            </StyledTable>
+                            <Button 
+                                color="primary" 
+                                size='lg'
+                                disabled={shouldDisableSubmit()} // clear and accurate
+                                onClick={()=> modalToggle()}
+                            >
+                                Submit New Gift
+                            </Button>
+                        </> : 
+                        <></> 
+                    }   
+                </>      
+            );
+        };
+
     //END Helper functions
 
         
@@ -882,40 +1006,21 @@ export default function GivingTool(){
                         tabLabels.map((year, index) => (
                             <TabPane key={year} tabId={index} style={{backgroundColor: "white", padding: "0 20px"}}>
                                 <h3>{ tabLabels[index] } Gifts:</h3>
-                                {/* render the historical gifts (table headers and data rows) if userGifts is truthy */}
+                                {/* Add Collapse buttons and Collapse content here */}
                                 {
-                                    Array.isArray(userGifts) && userGifts.length > 0 ? 
-                                    <>
-                                        <StyledTable>
-                                            {renderTableHeaders("top")}
-                                            {renderTableRows("top")}
-                                        </StyledTable>
-                                    </> : 
-                                    <>
-                                        <p>No gifts for selected period</p>
-                                    </>
-                                }
-                                {/* render the prompt to enter new gift for the 2025 folder tab */}
-                                { 
-                                    index === 0 ? 
-                                    <>
-                                        <h3>New Gift</h3>
-                                        <p>Enter gift details below:</p>
-                                        <StyledTable>
-                                            {renderTableHeaders("bottom")}
-                                            {renderTableRows("bottom")}
-                                        </StyledTable>
-                                        <Button 
-                                            color="primary" 
-                                            size='lg'
-                                            disabled={shouldDisableSubmit()} // clear and accurate
-                                            onClick={()=> modalToggle()}
-                                        >
-                                            Submit New Gift
-                                        </Button>
-                                    </> : 
-                                    <></> 
-                                }   
+                                    /* Collapse Button */
+                                    Object.keys(monthCollapses).map((month, monthIndex) => (
+                                        <React.Fragment key={month}>
+                                            <CollapseButton onClick={() => handleMonthCollapse(month)}>
+                                                {month}
+                                            </CollapseButton>
+                                            <Collapse isOpen={monthCollapses[month]}>
+                                                {monthCollapses[month] && renderCollapseContent(monthIndex, index)}
+                                            </Collapse>
+                                        </React.Fragment>
+                                    ))
+
+                                }      
                             </TabPane> 
                         ))
                     }
@@ -980,6 +1085,28 @@ export default function GivingTool(){
 };
 
 //styles
+
+//specifies the styling of the Month Collapse Buttons
+const CollapseButton = styled(Button)`
+    background-color: #17a2b8; /* Bootstrap 'info' color */
+    color: white; /* Text color */
+    font-size: 20px; /* Prominent text */
+    padding: 15px 30px; /* Maintain large clickable area */
+    border-radius: 5px; /* Rounded corners */
+    border: none; /* Cleaner look */
+    margin: 2rem 0 1rem 0; /* No margin on left/right, only vertical spacing */
+    width: 100%; /* Full width of container */
+    display: block; /* Ensures the button takes up the full width of its container */
+    cursor: pointer; /* Show hand cursor on hover */
+    text-align: left; /* Left-align the text */
+    &:hover {
+      background-color: #138496; /* Darker shade of 'info' on hover */
+      color: white; /* Ensure text remains visible */
+    }
+    &:active {
+      background-color: #117a8b; /* Darker shade when clicked */
+    }
+`;
 
 //outer containing element which specifies the page background and height
 const SubWrapper = styled.div`
