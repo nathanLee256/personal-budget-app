@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     Button,
     collapse,
@@ -57,8 +57,23 @@ export default function GivingTool(){
     //END retrieve
 
     //START state variable to store the user's donations (array of gift objects) returned from the server
-        //initialise as an empty array
-        const [userGifts, setUserGifts] = useState([]);
+        //initialise as an object with 12 properties (months), each storing an array of giftObjects
+        // whenever page loads (or user toggles a different folder tab), userGifts for that year is retrieved 
+        // and stores the user's gifts for that year 
+        const [userGifts, setUserGifts] = useState({
+            January: [],
+            February: [],
+            March: [],
+            April: [],
+            May: [],
+            June: [],
+            July: [],
+            August: [],
+            September: [],
+            October: [],
+            November: [],
+            December: []
+        });
 
         //gift objects are in the following form (this is the JSON returned from the server in the gifts/retrieve_gift_items route):
         /* 
@@ -109,25 +124,6 @@ export default function GivingTool(){
             }));
         };
 
-        //useMemo hook
-        const giftsByMonth = useMemo(() => {
-            //debug statement to evaluate time complexity
-            console.log("🧠 useMemo recalculating giftsByMonth...");
-            const grouped = {};
-
-            userGifts.forEach((gift) => {
-                const date = new Date(gift.date);
-                const month = date.getMonth(); // 0 = Jan
-
-                if (!grouped[month]) {
-                    grouped[month] = [];
-                }
-
-                grouped[month].push(gift);
-            });
-
-            return grouped;
-        }, [userGifts]);
 
     //END Collapse 
 
@@ -189,8 +185,6 @@ export default function GivingTool(){
             setConfirmNewgiftModal((prevState) => !prevState);
         };
         
-        //also create a reference variable to cache the userSelections state to handle the async code in the confirm button onClick
-        const cachedUserSelections = useRef(null);
     //END state
 
     //START state variables and handlers/helpers for the autosuggest functionality
@@ -651,9 +645,34 @@ export default function GivingTool(){
 
             //if this runs it means we have received a 200 OK response and the Promise has resolved to the JSON returned from the server
             .then(data => {
-                //update userGifts array with server (data)
-                setUserGifts(data.userGifts); //will assign an empty array if no gifts were found in database
-            
+                //filter the array of objects, assigning objects to the correct property (month) of the userGifts object
+                // Prepare grouped gifts
+                const grouped = {
+                    January: [],
+                    February: [],
+                    March: [],
+                    April: [],
+                    May: [],
+                    June: [],
+                    July: [],
+                    August: [],
+                    September: [],
+                    October: [],
+                    November: [],
+                    December: []
+                };
+
+                // extract the month of the gift, and assign it to the temp object which will then overwrite the state object
+                data.forEach((gift) => {
+                    const date = new Date(gift.date);
+                    const month = date.getUTCMonth(); // 0–11
+
+                    const monthName = Object.keys(grouped)[month];
+                    grouped[monthName].push(gift);
+                });
+
+                // Set all grouped data at once
+                setUserGifts(grouped);
             })
             .catch(error => {
                 console.error("Error:", error);
