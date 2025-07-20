@@ -554,7 +554,11 @@ export default function GivingTool(){
             function does 2 things: 1- removes the selected giftObj from the userGifts array. 2- perform a HTTP DELETE request
             to the server route, which deletes a row of data from the gift_items table (it doesn't return the updated table).
         */
-        const handleDelete = async (rowIndex, giftID) => {
+        const handleDelete = async (rowIndex, giftID, mnth) => {
+            //this function is called like this from renderTableRows JSX: handleDelete(index, giftObj.id, month)
+            // params: rowIndex represents the index of the selected gift object in the userGifts[month] array
+            // giftID represents the gift.id int value of that gift object
+            // mnth represents the active month (the current month param in the renderTableRows())
             
             // 2. Send DELETE request to server
             const url = `http://localhost:3001/gifts/delete_gift/${giftID}`;
@@ -571,8 +575,13 @@ export default function GivingTool(){
 
                     // 1 update userGifts and top table rendering only after successful deletion to ensure userGifts reflects db
                     setUserGifts((prevState) => {
-                        const updatedArr = prevState.filter((_, i) => i !== rowIndex);
-                        return updatedArr;
+                        const updatedArr = prevState[mnth].filter((_, i) => i !== rowIndex);
+
+                        return {
+                            ...prevState,
+                            [mnth]: updatedArr
+                        }
+                        
                     });
                     
                 } else {
@@ -662,7 +671,7 @@ export default function GivingTool(){
                     December: []
                 };
 
-                // extract the month of the gift, and assign it to the temp object which will then overwrite the state object
+                // extract the month of the gift, and assign it to the temp object (into the correct month property)  
                 data.forEach((gift) => {
                     const date = new Date(gift.date);
                     const month = date.getUTCMonth(); // 0–11
@@ -671,7 +680,7 @@ export default function GivingTool(){
                     grouped[monthName].push(gift);
                 });
 
-                // Set all grouped data at once
+                // Set all grouped data at once (overwrite the state object with the temp object)
                 setUserGifts(grouped);
             })
             .catch(error => {
@@ -741,7 +750,7 @@ export default function GivingTool(){
         };
 
         //function which returns the JSX representing the table rows
-        const renderTableRows = (position, filteredGifts) => { 
+        const renderTableRows = (position, month) => { 
 
             if(position === "top"){
                 //if this evals as T it means the collapse is not open in which case we just need to render the JSX above button
@@ -749,7 +758,7 @@ export default function GivingTool(){
                 return(
                     <tbody>
                         {
-                            filteredGifts.map((giftObj, index) => (
+                            userGifts[month].map((giftObj, index) => (
                                 <tr key={giftObj.id}>
                                     <td>
                                         {/* Column 0 displays gift id */}
@@ -785,7 +794,7 @@ export default function GivingTool(){
                                     </td>
                                     <td>
                                         {/* Render a Delete Button */}
-                                        <Button  key={giftObj.id} color="danger" onClick={() => handleDelete(index, giftObj.id)}>-delete item</Button>
+                                        <Button  key={giftObj.id} color="danger" onClick={() => handleDelete(index, giftObj.id, month)}>-delete item</Button>
                                     </td>
                                     
                                 </tr>
@@ -912,46 +921,21 @@ export default function GivingTool(){
 
         //function which returns the JSX contained within Collapse components
         const renderCollapseContent = (mnthIndex, yrIndex) => { 
+            //NB: yrIndex represents folder tab label index e.g. [2025, 2024, 2023, 2022, 2021]
+            // mnthIndex represents month index e.g. ["January", "February", "March", ...]
 
-            
-
-            /* 
-                the first thing we will need to do here is filter the userGifts state array to create a new array
-                which contains only the gift objects for the selected month/year
-            */
-
-            /* let filteredArr = [];
-            userGifts.forEach((gift) => {
-                //extract the date and month from the gift obj
-                const date = new Date(gift.date);
-                const month = date.getUTCMonth();
-
-                //debug statement
-                console.log(
-                    `Gift ID: ${gift.id} | Raw Date: ${gift.date} | Parsed Month: ${month} (0=Jan)`
-                );
-
-                //if the month of gift is equal to the mnthIndex (of the Collapse), add the gift to the filtered array
-                if(month === mnthIndex){
-                    filteredArr.push(gift);
-                }
-            }); */
-
-            // the commented out code above works but results in iterating over userGifts repeatedly (everytime react re-renders page)
-            // to reduce the time-complexity, we can use useMemo instead. The code below does the same thing at far less cost
-            const filteredArr = giftsByMonth[mnthIndex] || [];
-
-            
+            //extract the month using the mnthIndex
+            const activeMonth = Object.keys(userGifts)[mnthIndex];
 
             //now we are ready to return JSX: render the historical gifts (table headers and data rows) if userGifts is truthy
             return(
                 <>
                     {
-                        Array.isArray(filteredArr) && filteredArr.length > 0 ? 
+                        Array.isArray(userGifts[activeMonth]) && userGifts[activeMonth].length > 0 ? 
                         <>
                             <StyledTable>
                                 {renderTableHeaders("top")}
-                                {renderTableRows("top", filteredArr)}
+                                {renderTableRows("top", activeMonth)}
                             </StyledTable>
                         </> : 
                         <>
@@ -966,7 +950,7 @@ export default function GivingTool(){
                             <p>Enter gift details below:</p>
                             <StyledTable>
                                 {renderTableHeaders("bottom")}
-                                {renderTableRows("bottom", filteredArr)}
+                                {renderTableRows("bottom", activeMonth)}
                             </StyledTable>
                             <Button 
                                 color="primary" 
