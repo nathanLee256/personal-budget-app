@@ -672,7 +672,7 @@ export default function GivingTool(){
                 };
 
                 // extract the month of the gift, and assign it to the temp object (into the correct month property)  
-                data.forEach((gift) => {
+                data.userGifts.forEach((gift) => {
                     const date = new Date(gift.date);
                     const month = date.getUTCMonth(); // 0–11
 
@@ -682,6 +682,7 @@ export default function GivingTool(){
 
                 // Set all grouped data at once (overwrite the state object with the temp object)
                 setUserGifts(grouped);
+                console.log("userGifts after useEffect 1:", grouped);
             })
             .catch(error => {
                 console.error("Error:", error);
