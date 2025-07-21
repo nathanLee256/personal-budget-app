@@ -372,7 +372,7 @@ export default function GivingTool(){
 
         // Event handler function to toggle the active tab
         // When the user clicks (toggles) an inactive tab this function will run which will update the activeTab state to 
-        // the id value of another tab (e.g. "2"). 
+        // the id value of another tab (e.g. 2). 
         const toggleTab = (tab) => {
             //update the activeTab
             if (activeTab !== tab) {
@@ -751,7 +751,38 @@ export default function GivingTool(){
         };
 
         //function which returns the JSX representing the table rows
-        const renderTableRows = (position, month) => { 
+        //function is called from renderCollapseContent like this {renderTableRows("bottom", activeMonth)}
+        const renderTableRows = (position, currentMonth) => { 
+            /* 
+                params: position is either "top" or "bottom" represents the table rows it is being called to render (top or bottom table)
+                currentMonth represents the activeMonth (we iterate over the 12 months in the root JSX, and call 
+                renderCollapseContent(monthIndex, index) for each month (12 times). Here monthIndex is 0-12, and index is the 
+                year index (0-4 because there are 5 years = 5 folder tabs). Then each time renderCollapseContent() runs, it calls 
+                renderTableRows() either once or twice (depending on the userGifts[activeMonth] state) and renderTableRows is called
+                like this: {renderTableRows("top", activeMonth) and {renderTableRows("bottom", activeMonth). So activeMonth becomes
+                the currentMonth param (string value e.g. "March") as the root JSX iterates over the months of the year.
+            */
+
+            // first we create a mapping object to map month strings (stored in currentMonth) to integer strings 
+            const monthNames = {
+                January: '01', February: '02', March: '03', April: '04',
+                May: '05', June: '06', July: '07', August: '08',
+                September: '09', October: '10', November: '11', December: '12'
+            };
+
+            //then we use the mapping object to obtain the interger string index of the currentMonth
+            const monthNumber = monthNames[currentMonth]; // e.g. "March" → "03"
+
+            //next map the activeTab state (e.g. 0) to the respective year (e.g. 2025) using:
+            const year = tabLabels[activeTab]; // get the year string from tabLabels
+            
+            
+            //next, we  find the last day of the current month (e.g., 28, 30, or 31), in order to restrict the date picker input 
+            // to only dates within that month
+            const lastDayOfMonth = new Date(parseInt(year), parseInt(monthNumber), 0)
+                .getDate()
+                .toString()
+                .padStart(2, '0'); // e.g. 31 → "31"
 
             if(position === "top"){
                 //if this evals as T it means the collapse is not open in which case we just need to render the JSX above button
@@ -759,7 +790,7 @@ export default function GivingTool(){
                 return(
                     <tbody>
                         {
-                            userGifts[month].map((giftObj, index) => (
+                            userGifts[currentMonth].map((giftObj, index) => (
                                 <tr key={giftObj.id}>
                                     <td>
                                         {/* Column 0 displays gift id */}
@@ -795,7 +826,7 @@ export default function GivingTool(){
                                     </td>
                                     <td>
                                         {/* Render a Delete Button */}
-                                        <Button  key={giftObj.id} color="danger" onClick={() => handleDelete(index, giftObj.id, month)}>-delete item</Button>
+                                        <Button  key={giftObj.id} color="danger" onClick={() => handleDelete(index, giftObj.id, currentMonth)}>-delete item</Button>
                                     </td>
                                     
                                 </tr>
@@ -873,7 +904,9 @@ export default function GivingTool(){
                                 {/* column 3  prompts the user to select a date or enter a date */}
                                 <input
                                     type="date"
-                                    value={userSelections.date}
+                                    value={userSelections.date || `${year}-${monthNumber}-01`}
+                                    min={`${year}-${monthNumber}-01`}
+                                    max={`${year}-${monthNumber}-${lastDayOfMonth}`}
                                     onChange={(e) => handleDateChange(e.target.value)}
                                 />
                             </td>
@@ -976,7 +1009,7 @@ export default function GivingTool(){
 
 
 
-    //JSX
+    // Root JSX
     return(
         <SubWrapper>
             <StyledContainer>
