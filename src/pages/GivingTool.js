@@ -471,7 +471,14 @@ export default function GivingTool(){
                     console.log('Database updated successfully:', updatedData);
                     
                     //update userGifts
-                    setUserGifts(updatedData);
+
+                        //extract the month  property from the response payload
+                        const { month } = updatedData;
+                        
+                        setUserGifts((prevState) => ({
+                            ...prevState,
+                            [month] : updatedData.userGifts //overwrite the previous value of the property
+                        }));
 
                 } else {
                     console.error('Server responded with an error:', response.status);
