@@ -224,3 +224,44 @@ const file = {
 	size: 23456, 
 	type: "application/pdf"
 }
+
+/* 
+	//terminal output for the process used to merge a completed branch back into master, then delete branch
+	Windows PowerShell
+	Copyright (C) Microsoft Corporation. All rights reserved.
+	Try the new cross-platform PowerShell https://aka.ms/pscore6
+
+	PS C:\Users\natha> cd React
+	PS C:\Users\natha\React> cd template
+	PS C:\Users\natha\React\template> code .
+	PS C:\Users\natha\React\template> git branch
+	master
+	* userGifts-monthly-refactor
+	PS C:\Users\natha\React\template> git checkout master
+	>>
+	Switched to branch 'master'
+	Your branch is up to date with 'origin/master'.
+	PS C:\Users\natha\React\template> git merge userGifts-monthly-refactor
+	>>
+	Updating 648f460..0fc73af
+	Fast-forward
+	src/pages/GivingTool.js | 182 ++++++++++++++++++++++++++++++------------------
+	1 file changed, 113 insertions(+), 69 deletions(-)
+	PS C:\Users\natha\React\template> git push origin master
+	>>
+	Total 0 (delta 0), reused 0 (delta 0), pack-reused 0 (from 0)
+	To https://github.com/nathanLee256/personal-budget-app.git
+	648f460..0fc73af  master -> master
+	PS C:\Users\natha\React\template> git branch
+	* master
+	userGifts-monthly-refactor
+	PS C:\Users\natha\React\template> code .
+	PS C:\Users\natha\React\template> git branch -d userGifts-monthly-refactor
+	>>
+	Deleted branch userGifts-monthly-refactor (was 0fc73af).
+	PS C:\Users\natha\React\template> git push origin --delete userGifts-monthly-refactor
+	>>
+	To https://github.com/nathanLee256/personal-budget-app.git
+	- [deleted]         userGifts-monthly-refactor
+	PS C:\Users\natha\React\template> 
+*/
