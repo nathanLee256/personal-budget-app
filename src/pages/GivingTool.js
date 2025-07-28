@@ -797,47 +797,33 @@ export default function GivingTool(){
                 return(
                     <tbody>
                         {
-                            userGifts[currentMonth].map((giftObj, index) => (
-                                <tr key={giftObj.id}>
-                                    <td>
-                                        {/* Column 0 displays gift id */}
-                                        {giftObj.id}
-                                    </td>
-                                    <td>
-                                        {/* Column 1 displays giftType */}
-                                        {giftObj.giftType}
-                                    </td>
-                                    <td>
-                                        {/* Column 2 displays organisation*/}
-                                        {giftObj.organisation}
-                                    </td>
-                                    <td>
-                                        {/* Column 3 displays amount*/}
-                                        {giftObj.amount}
-                                    </td>
-                                    <td>
-                                        {/* Column 4 displays date*/}
-                                        {giftObj.date}
-                                    </td>
-                                    <td>
-                                        {/* Column 5 displays description*/}
-                                        {giftObj.description}
-                                    </td>
-                                    <td>
-                                        {/* Column 6 displays receipt*/}
-                                        {giftObj.receipt}
-                                    </td>
-                                    <td>
-                                        {/* Column 7 displays tax*/}
-                                        {   giftObj.dgr === 1 ? "Yes": "No" }
-                                    </td>
-                                    <td>
-                                        {/* Render a Delete Button */}
-                                        <Button  key={giftObj.id} color="danger" onClick={() => handleDelete(index, giftObj.id, currentMonth)}>-delete item</Button>
-                                    </td>
-                                    
-                                </tr>
-                            ))
+                            userGifts[currentMonth].map((giftObj, index) => {
+                            
+                                let firstSevenKeys = Object.keys(giftObj);
+                                firstSevenKeys.pop();
+                                
+                                return(
+                                    <tr key={giftObj.id}>
+                                        {/* first 7 columns display respective properties e.g. giftObj.id, giftObj.giftType, ... */}
+                                        {
+                                            firstSevenKeys.map((prop) =>(
+                                                <td>
+                                                    {giftObj[prop]}
+                                                </td>
+                                            ))
+                                        }
+                                        <td>
+                                            {/* Column 7 displays tax*/}
+                                            {   giftObj.dgr === 1 ? "Yes": "No" }
+                                        </td>
+                                        <td>
+                                            {/* Column 8 Renders a Delete Button */}
+                                            <Button  key={giftObj.id} color="danger" onClick={() => handleDelete(index, giftObj.id, currentMonth)}>-delete item</Button>
+                                        </td>
+                                        
+                                    </tr>
+                                )
+                            })
                         }
                     </tbody>
                     
