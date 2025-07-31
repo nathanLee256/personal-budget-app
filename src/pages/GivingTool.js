@@ -297,6 +297,39 @@ export default function GivingTool(){
             setOrgSuggestions([]);
         };
 
+        //7- useEffect hook to allow user to add a custom organisation value (not found in autosuggest list)
+        useEffect(() => {
+
+            // first we double-check that the orgValue (current user input) is not in orgList(list of dgr's).
+            // if it is, then matchedSuggestion will be assigned an organisation object e.g. 
+            // {"entityName": "Salvation Army", "abn": 1234567, "orgId": 1}
+
+            const matchedSuggestion = orgList.find(
+                (org) => org.entityName.toLowerCase() === orgValue.trim().toLowerCase()
+            );
+
+            //then this block runs if there were no matches, and orgValue is not an empty string
+            // in this case we need to update userSelections.organisation with a new object (using the current orgValue string)
+            if (!matchedSuggestion && orgValue.trim() !== '') {
+
+                //and here we check if the user has previously selected a org from list, then changed their mind
+                // in which case currentOrg will hold the name of the previous selection 
+                //in this case the inner if condition runs which overwrites/updates the userSelections.organisation state
+                const currentOrg = userSelections.organisation?.entityName || '';
+                if (currentOrg !== orgValue.trim()) {
+                    setUserSelections(prev => ({
+                        ...prev,
+                        organisation: {
+                            entityName: orgValue.trim(),
+                            orgId: null,
+                            abn: null
+                        }
+                    }));
+                }
+            }
+        }, [orgValue]);
+
+
     //END state
 
     //START handler/s for the upload file functionality
@@ -443,6 +476,7 @@ export default function GivingTool(){
         const handleSubmit = async () => {
 
             const url = 'http://localhost:3001/gifts/update_gift_items';
+
 
             //here we need to send the current userSelections data a POST request to the server
             //construct a payload
