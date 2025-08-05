@@ -2,7 +2,7 @@ import React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import {
     Button,
-    collapse,
+    Collapse,
     Dropdown,
     DropdownToggle,
     DropdownMenu,
@@ -11,7 +11,6 @@ import {
     Input,
     InputGroup,
     InputGroupText,
-    Label,
     Table as ReactstrapTable,
     Modal,
     ModalBody,
@@ -22,8 +21,8 @@ import {
     NavLink,
     TabContent,
     TabPane,
-    Collapse,
-  } from 'reactstrap';
+} from 'reactstrap';
+
 import styled from 'styled-components';
 import { useAuth } from '../components/AuthContext.js';
 import Autosuggest from 'react-autosuggest';
