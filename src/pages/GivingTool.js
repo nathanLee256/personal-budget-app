@@ -126,26 +126,30 @@ export default function GivingTool(){
 
     //END Collapse 
 
-    //START State object and toggler function for the 2 dropdowns 
-        //array of bool values which represent the isOpen state of the two dropdowns in the Collapse JSX of the 2025 tab
-        //The 2 dropdowns are located in the first 2 columns
+    //START State object and toggler function for dropdown in column 0 
+        //array of bool values which represent the isOpen state of the dropdown in the Collapse JSX for each month in the 2025 tab
         //each dropdown component is referenced by: dropdownOpen[colIndex]
-        const [dropdown, setDropdown] = useState({
-            columnOne: {
-                dropdownOpen: false,
-            },
-            columnTwo: {
-                dropdownOpen: false,
-            }
+
+        const [dropdownOpen, setDropdownOpen] = useState({
+            January: false,     //12 properties to store the state of 12 dropdowns- one for each month of the activeTab year
+            February: false,    //initialise all as false- i.e. dropdowns are initially closed
+            March: false,
+            April: false,
+            May: false,
+            June: false,
+            July: false,
+            August: false,
+            September: false,
+            October: false,
+            November: false,
+            December: false
         });
 
-        //toggler function which reverses the isOpen state of a dropdown which is referenced by its colIndex
-        const toggleDropdown = (colIndex) => {
-            setDropdown((prevState) => ({
+        //toggler function which reverses the isOpen state of a dropdown which is referenced by the currentMonth 
+        const toggleDropdown = (month) => {
+            setDropdownOpen((prevState) => ({
                 ...prevState,
-                [colIndex]: {
-                    dropdownOpen: !prevState[colIndex].dropdownOpen
-                }
+                [month]: !prevState[month] //reverse the value of the selected month to open/close it
             }));     
         }
         // array of gift types for the columnOne dropdown menu
@@ -565,8 +569,8 @@ export default function GivingTool(){
 
     //START event handlers
         
-        //runs when user selects a gift type from column 1 of table (when prompted to enter the dets of a new gift)
-        const handleTypeSelect = (type) => {
+        //runs when user selects a gift type from column 0 of table (when prompted to enter the dets of a new gift)
+        const handleTypeSelect = (type, month) => {
 
             //check that function runs
             console.log("✅ handleTypeSelect is firing!"); 
@@ -577,7 +581,7 @@ export default function GivingTool(){
                 giftType: type
             }))
             //now close the dropdown
-            toggleDropdown(columnIDs[0]);
+            toggleDropdown(month);
         };
 
         //function runs when user enters input in the Organisation (column 1) in the New Gift table
@@ -870,8 +874,9 @@ export default function GivingTool(){
                             <td>
                                 {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
                                 <Dropdown
-                                    isOpen={dropdown[columnIDs[0]].dropdownOpen}
-                                    toggle={() => toggleDropdown(columnIDs[0])}
+                                    isOpen={dropdownOpen[currentMonth]}
+                                    toggle={() => toggleDropdown(currentMonth)}
+                                    key={currentMonth}
                                 >
                                     <DropdownToggle caret color="info">
                                         {userSelections.giftType || "Select Type"}
@@ -882,7 +887,7 @@ export default function GivingTool(){
                                             giftTypes.map((cat, i) => (
                                                 <DropdownItem
                                                     key={i}
-                                                    onClick={() => handleTypeSelect(cat)}
+                                                    onClick={() => handleTypeSelect(cat, currentMonth)}
                                                 >{cat}
                                                 </DropdownItem>
                                             ))
@@ -894,6 +899,7 @@ export default function GivingTool(){
                                 {/* column 1 displays an input field which prompts user to enter the name of the organisation */}
                                 <SuggestionsWrapper>
                                     <Autosuggest
+                                        key={currentMonth}
                                         suggestions={orgSuggestions}
                                         onSuggestionsFetchRequested={onSuggestionsFetchRequested}
                                         onSuggestionsClearRequested={onSuggestionsClearRequested}
