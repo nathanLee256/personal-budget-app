@@ -439,14 +439,106 @@ export default function GivingTool(){
     
 
     //START state object to store user selections: will be used to append new object to userGifts when user has entered all data
+        // I need to refactor thsi state object into an object with 12 properties. The userSelections state will store 12 objects,
+        // which store the user's selections from the interactive elements in the bottom table of each Collapse(month) JSX
         const [userSelections, setUserSelections] = useState({
-            giftType: "",
-            organisation: null, //will store an {organisation} object with entityName, abn, and orgId properties
-            amount: 0,
-            date:"",    //e.g. "2025-06-27"
-            description: "",
-            receipt: "",   // will store the url string where the file is stored on server
-        });
+            January: {
+                giftType: "",
+                organisation: null, //will store an {organisation} object with entityName, abn, and orgId properties
+                amount: 0,
+                date:"",    //e.g. "2025-06-27"
+                description: "",
+                receipt: "",   // will store the url string where the file is stored on server
+            },
+            February: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            March: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            April: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            May: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            June: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            July: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            August: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            September: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            October: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            November: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            December: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+        }); 
 
         //handler which runs when user enters a value in the 'amount' column <InputGrouptext> field
         const handleAmountChange = (val) => {
