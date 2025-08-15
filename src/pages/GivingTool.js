@@ -192,15 +192,147 @@ export default function GivingTool(){
 
     //START state variables and handlers/helpers for the autosuggest functionality
 
+        //state object to store user selections: will be used to append new object to userGifts when user has entered all data
+        // This is an object with 12 properties. The userSelections state will store 12 objects,
+        // which store the user's selections from the interactive elements in the bottom table of each Collapse(month) JSX
+        const [userSelections, setUserSelections] = useState({
+            January: {
+                giftType: "",
+                organisation: null, //will store an {organisation} object with entityName, abn, and orgId properties
+                amount: 0,
+                date:"",    //e.g. "2025-06-27"
+                description: "",
+                receipt: "",   // will store the url string where the file is stored on server
+            },
+            February: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            March: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            April: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            May: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            June: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            July: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            August: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            September: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            October: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            November: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            December: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+        }); 
+
         // array stores the full list of DGR's from the database
+        //we only need 1 orgList and 1 useEffect which runs once when the page loads, to fetch the DGR's and populate orgList,
+        //which can be used in each of the 12 <autosuggest> components
         const [orgList, setOrgList] = useState([]); 
 
-        // stores the list of DGR suggestions which will populate the menu afer each keystroke of user input
+        // state object which stores a list of DGR suggestions which will populate the dd menu (for each month) afer each 
+        // keystroke of user input for the current month
         // there will be an event handler function which updates the list whenever the user input changes
-        const [orgSuggestions, setOrgSuggestions] = useState([]); 
+        const [orgSuggestions, setOrgSuggestions] = useState({
+            January: [],
+            February: [],
+            March: [],
+            April: [],
+            May: [],
+            June: [],
+            July: [],
+            August: [],
+            September: [],
+            October: [],
+            November: [],
+            December: []
+        }); 
 
-        //stores the current value in the input field
-        const [orgValue, setOrgValue] = useState(''); 
+
+        //state object which stores the current value each (month) autosuggest input field
+        const [orgValue, setOrgValue] = useState({
+            January: '',
+            February: '',
+            March:'',
+            April:'',
+            May:'',
+            June:'',
+            July:'',
+            August:'',
+            September:'',
+            October:'',
+            November:'',
+            December:''
+        });
         
         /* NB: the following functions are listed below in the order that they are called in the process */
 
@@ -256,18 +388,22 @@ export default function GivingTool(){
 
         }, []);
 
-        //1- event handler which runs when user types input into <Autosuggest> input field
-        const onOrgChange = (event, { newValue }) => {
-            setOrgValue(newValue);
+        //1- event handler which runs when user types input into one of the 12 <Autosuggest> input fields
+        const onOrgChange = (month) => (event, { newValue }) => {
+            setOrgValue((prevState) => ({
+                ...prevState,
+                [month] : newValue
+            }));
         };
 
-        // 2a- runs by default every time orgValue state changes, and calls the 2b handler function 
-        const onSuggestionsFetchRequested = ({ value }) => {
-            debouncedFetchSuggestions(value);
+        // 2a- runs by default every time the orgValue state (of one of the autosuggest components) changes, and calls the 2b 
+        // handler function 
+        const onSuggestionsFetchRequested = (month) => ({ value }) => {
+            debouncedFetchSuggestions(month, value);
         };
 
         //2b- debounce() which Filters the full org list to get matches based on current input
-        const debouncedFetchSuggestions = debounce((value) => {
+        const debouncedFetchSuggestions = debounce((month, value) => {
             const inputValue = value.trim().toLowerCase();
             const inputLength = inputValue.length;
 
@@ -276,8 +412,12 @@ export default function GivingTool(){
             );
 
             const limited = filtered.slice(0, 10); // only show top 10 matches
-            setOrgSuggestions(limited);
-        }, 150); // 150ms delay
+
+            setOrgSuggestions(prev => ({
+                ...prev,
+                [month]: limited
+            }));
+        }, 150); //150ms delay
 
         // 3- helper function which renders each suggestion in the dropdown list
         const renderSuggestion = (suggestion) => (
@@ -288,49 +428,50 @@ export default function GivingTool(){
         const getSuggestionValue = (suggestion) => suggestion.entityName;
 
         //5- event handler function which runs when the user has made a selection from dropdown list. It updates the userSelections state
-        const onSuggestionSelected = (event, { suggestion }) => {
+        const onSuggestionSelected = (month) => (event, { suggestion }) => {
             setUserSelections(prev => ({
                 ...prev,
-                organisation: suggestion
+                [month] : {
+                    ...prev[month],
+                    organisation: suggestion
+                }
             }));
         };
         
         // 6-helper/cleanup function which Clears the suggestions list (called when input is cleared or blurred)
-        const onSuggestionsClearRequested = () => {
-            setOrgSuggestions([]);
+        const onSuggestionsClearRequested = (month) => () => {
+            setOrgSuggestions(prev => ({
+                ...prev,
+                [month]: []
+            }));
         };
 
         //7- useEffect hook to allow user to add a custom organisation value (not found in autosuggest list)
         useEffect(() => {
+            Object.keys(orgValue).forEach(month => {
+                const inputValue = orgValue[month]?.trim() || '';
+                const matchedSuggestion = orgList.find(
+                    (org) => org.entityName.toLowerCase() === inputValue.toLowerCase()
+                );
 
-            // first we double-check that the orgValue (current user input) is not in orgList(list of dgr's).
-            // if it is, then matchedSuggestion will be assigned an organisation object e.g. 
-            // {"entityName": "Salvation Army", "abn": 1234567, "orgId": 1}
-
-            const matchedSuggestion = orgList.find(
-                (org) => org.entityName.toLowerCase() === orgValue.trim().toLowerCase()
-            );
-
-            //then this block runs if there were no matches, and orgValue is not an empty string
-            // in this case we need to update userSelections.organisation with a new object (using the current orgValue string)
-            if (!matchedSuggestion && orgValue.trim() !== '') {
-
-                //and here we check if the user has previously selected a org from list, then changed their mind
-                // in which case currentOrg will hold the name of the previous selection 
-                //in this case the inner if condition runs which overwrites/updates the userSelections.organisation state
-                const currentOrg = userSelections.organisation?.entityName || '';
-                if (currentOrg !== orgValue.trim()) {
-                    setUserSelections(prev => ({
-                        ...prev,
-                        organisation: {
-                            entityName: orgValue.trim(),
-                            orgId: null,
-                            abn: null
-                        }
-                    }));
+                if (!matchedSuggestion && inputValue !== '') {
+                    const currentOrg = userSelections[month]?.organisation?.entityName || '';
+                    if (currentOrg !== inputValue) {
+                        setUserSelections(prev => ({
+                            ...prev,
+                            [month]: {
+                                ...prev[month],
+                                organisation: {
+                                    entityName: inputValue,
+                                    orgId: null,
+                                    abn: null
+                                }
+                            }
+                        }));
+                    }
                 }
-            }
-        }, [orgValue]);
+            });
+        }, [orgValue, orgList, userSelections]);
 
 
     //END state
@@ -438,114 +579,18 @@ export default function GivingTool(){
 
     
 
-    //START state object to store user selections: will be used to append new object to userGifts when user has entered all data
-        // I need to refactor thsi state object into an object with 12 properties. The userSelections state will store 12 objects,
-        // which store the user's selections from the interactive elements in the bottom table of each Collapse(month) JSX
-        const [userSelections, setUserSelections] = useState({
-            January: {
-                giftType: "",
-                organisation: null, //will store an {organisation} object with entityName, abn, and orgId properties
-                amount: 0,
-                date:"",    //e.g. "2025-06-27"
-                description: "",
-                receipt: "",   // will store the url string where the file is stored on server
-            },
-            February: {
-                giftType: "",
-                organisation: null, 
-                amount: 0,
-                date:"",    
-                description: "",
-                receipt: "",   
-            },
-            March: {
-                giftType: "",
-                organisation: null, 
-                amount: 0,
-                date:"",    
-                description: "",
-                receipt: "",   
-            },
-            April: {
-                giftType: "",
-                organisation: null, 
-                amount: 0,
-                date:"",    
-                description: "",
-                receipt: "",   
-            },
-            May: {
-                giftType: "",
-                organisation: null, 
-                amount: 0,
-                date:"",    
-                description: "",
-                receipt: "",   
-            },
-            June: {
-                giftType: "",
-                organisation: null, 
-                amount: 0,
-                date:"",    
-                description: "",
-                receipt: "",   
-            },
-            July: {
-                giftType: "",
-                organisation: null, 
-                amount: 0,
-                date:"",    
-                description: "",
-                receipt: "",   
-            },
-            August: {
-                giftType: "",
-                organisation: null, 
-                amount: 0,
-                date:"",    
-                description: "",
-                receipt: "",   
-            },
-            September: {
-                giftType: "",
-                organisation: null, 
-                amount: 0,
-                date:"",    
-                description: "",
-                receipt: "",   
-            },
-            October: {
-                giftType: "",
-                organisation: null, 
-                amount: 0,
-                date:"",    
-                description: "",
-                receipt: "",   
-            },
-            November: {
-                giftType: "",
-                organisation: null, 
-                amount: 0,
-                date:"",    
-                description: "",
-                receipt: "",   
-            },
-            December: {
-                giftType: "",
-                organisation: null, 
-                amount: 0,
-                date:"",    
-                description: "",
-                receipt: "",   
-            },
-        }); 
+    // START State
+        
 
         //handler which runs when user enters a value in the 'amount' column <InputGrouptext> field
-        const handleAmountChange = (val) => {
+        const handleAmountChange = (val, month) => {
             const numeric = Number(val); // convert the string input to a number (e.g. "10" → 10)
             setUserSelections((prevState) => ({
                 ...prevState,
-                amount: isNaN(numeric) ? null : numeric
+                [month]: {
+                    ...prevState[month],
+                    amount: isNaN(numeric) ? null : numeric
+                }
             }));
         };
 
@@ -670,7 +715,10 @@ export default function GivingTool(){
             //update the dropdown state obj to display the selected gift type in the DropdownToggle
             setUserSelections((prevState) => ({
                 ...prevState,
-                giftType: type
+                [month]: {
+                    ...prevState[month],
+                    giftType: type
+                }
             }))
             //now close the dropdown
             toggleDropdown(month);
@@ -968,17 +1016,16 @@ export default function GivingTool(){
                                 <Dropdown
                                     isOpen={dropdownOpen[currentMonth]}
                                     toggle={() => toggleDropdown(currentMonth)}
-                                    key={currentMonth}
                                 >
                                     <DropdownToggle caret color="info">
-                                        {userSelections.giftType || "Select Type"}
+                                        {userSelections[currentMonth].giftType || "Select Type"}
                                     </DropdownToggle>
                                     <DropdownMenu>
                                         {/* iterate over giftTypes to display DropdownItems */}
                                         {
                                             giftTypes.map((cat, i) => (
                                                 <DropdownItem
-                                                    key={i}
+                                                    key={`${currentMonth}-${i}`}
                                                     onClick={() => handleTypeSelect(cat, currentMonth)}
                                                 >{cat}
                                                 </DropdownItem>
@@ -991,25 +1038,23 @@ export default function GivingTool(){
                                 {/* column 1 displays an input field which prompts user to enter the name of the organisation */}
                                 <SuggestionsWrapper>
                                     <Autosuggest
-                                        key={currentMonth}
-                                        suggestions={orgSuggestions}
-                                        onSuggestionsFetchRequested={onSuggestionsFetchRequested}
-                                        onSuggestionsClearRequested={onSuggestionsClearRequested}
+                                        suggestions={orgSuggestions[currentMonth] || []}
+                                        onSuggestionsFetchRequested={onSuggestionsFetchRequested(currentMonth)}
+                                        onSuggestionsClearRequested={onSuggestionsClearRequested(currentMonth)}
                                         getSuggestionValue={getSuggestionValue}
                                         renderSuggestion={renderSuggestion}
-                                        onSuggestionSelected={onSuggestionSelected}
+                                        onSuggestionSelected={onSuggestionSelected(currentMonth)}
                                         inputProps={{
                                             placeholder: "Enter organisation",
-                                            value: orgValue,
-                                            onChange: onOrgChange
+                                            value: orgValue[currentMonth] || "",
+                                            onChange: onOrgChange(currentMonth)
                                         }}
                                     />
                                     {
-                                        orgSuggestions.length === 0 && !userSelections.organisation && orgValue ? 
-                                            <p>
-                                                No matches found
-                                            </p> : 
-                                            <></>
+                                        (orgSuggestions[currentMonth]?.length === 0) &&
+                                            !(userSelections[currentMonth]?.organisation) &&
+                                                orgValue[currentMonth] ? 
+                                                    <p>No matches found</p> : null
                                     }
                                 </SuggestionsWrapper>
                             </td>
@@ -1018,8 +1063,8 @@ export default function GivingTool(){
                                 <InputGroup>
                                     <InputGroupText>$</InputGroupText> {/* Prepend $ symbol */}
                                     <Input
-                                        value={userSelections.amount}
-                                        onChange={(e) => handleAmountChange(e.target.value)}
+                                        value={userSelections[currentMonth].amount}
+                                        onChange={(e) => handleAmountChange(e.target.value, currentMonth)}
                                         placeholder="Enter amount"
                                     />
                                 </InputGroup>
@@ -1171,7 +1216,7 @@ export default function GivingTool(){
                                 {
                                     /* Collapse Button */
                                     Object.keys(monthCollapses).map((month, monthIndex) => (
-                                        <React.Fragment key={month}>
+                                        <React.Fragment key={`${year}-${month}`}>
                                             <CollapseButton onClick={() => handleMonthCollapse(month)}>
                                                 {month}
                                             </CollapseButton>
