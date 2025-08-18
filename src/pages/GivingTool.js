@@ -495,11 +495,25 @@ export default function GivingTool(){
             2-The url path then is used to update the userSelections.file
         */
 
-        //START reference variable to store the file <input> element in the DOM
-            const fileInputRef = useRef(null);
+        //START reference variable to store the file <input> elements in the DOM
+            // here we create an object (fileInputRefs) which will store a a pointer value in its properties
+            //each pointer references a unique <input> element from the DOM
+            /* 
+                fileInputRefs = {
+                    current: {
+                        January: <input id="fileInput-January">,
+                        February: <input id="fileInput-February">,
+                        ...fileInputRefs.current
+                    }
+                }
+            
+            */
+            const fileInputRefs = useRef({});
 
         //END reference
-        const handleFileChange = async (event) => {
+
+
+        const handleFileChange = async (event, month, year) => {
 
             //0- extract the file obj (the user selected file) from the DOM, store it in formData object
             const selectedFile = event.target.files[0];
@@ -507,7 +521,7 @@ export default function GivingTool(){
             formData.append("receipt", selectedFile);
 
             //1- send to server 
-            const url = 'http://localhost:3001/gifts/upload_receipt';
+            const url = `http://localhost:3001/gifts/upload_receipt?month=${month}&year=${year}`; //updated to use query parameters
 
             
             try{
@@ -527,7 +541,11 @@ export default function GivingTool(){
                 if (fileUrl) {
                     setUserSelections((prevState) => ({
                         ...prevState,
-                        receipt: fileUrl,
+                        [month]: {
+                            ...prevState[month],
+                            receipt: fileUrl
+                        }
+                        
                     }));
                 } else {
                     console.error("Upload succeeded but no fileUrl returned!");
@@ -595,19 +613,25 @@ export default function GivingTool(){
         };
 
         //handler which runs when the user enters/selects a date in the 'date' column
-        const handleDateChange = (newDate) => {
+        const handleDateChange = (month, newDate) => {
             //udpate the userSelections state
             setUserSelections((prevState) => ({
                 ...prevState,
-                date: newDate
+                [month] : {
+                    ...prevState[month],
+                    date: newDate
+                }
             }));
         };
 
         //handler which runs when user enters a description in the 'description' column of bottom table
-        const handleDescriptionChange = (text) => {
+        const handleDescriptionChange = (month, text) => {
             setUserSelections((prevState) => ({
                 ...prevState,
-                description: text
+                [month]: {
+                    ...prevState[month],
+                    description: text
+                }
             }));
 
         }
@@ -664,20 +688,123 @@ export default function GivingTool(){
 
                 //reset state
                 setUserSelections({
-                    giftType: "",
-                    organisation: null,
-                    amount: 0,
-                    date: "",
-                    description: "",
-                    receipt: "",
+                    January: {
+                        giftType: "",
+                        organisation: null, //will store an {organisation} object with entityName, abn, and orgId properties
+                        amount: 0,
+                        date:"",    //e.g. "2025-06-27"
+                        description: "",
+                        receipt: "",   // will store the url string where the file is stored on server
+                    },
+                    February: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
+                    March: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
+                    April: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
+                    May: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
+                    June: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
+                    July: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
+                    August: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
+                    September: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
+                    October: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
+                    November: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
+                    December: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
                 });
 
                 //also reset orgValue
-                setOrgValue('');
+                setOrgValue({
+                    January: '',
+                    February: '',
+                    March:'',
+                    April:'',
+                    May:'',
+                    June:'',
+                    July:'',
+                    August:'',
+                    September:'',
+                    October:'',
+                    November:'',
+                    December:''
+                });
 
                 //reset the file input ref variable
-                if (fileInputRef.current) {
-                    fileInputRef.current.value = null;
+                if (fileInputRefs.current) {
+                    fileInputRefs.current.value = null;
                 }
             }
         };
@@ -1073,10 +1200,10 @@ export default function GivingTool(){
                                 {/* column 3  prompts the user to select a date or enter a date */}
                                 <input
                                     type="date"
-                                    value={userSelections.date || `${year}-${monthNumber}-01`}
+                                    value={userSelections[currentMonth]?.date || `${year}-${monthNumber}-01`}
                                     min={`${year}-${monthNumber}-01`}
                                     max={`${year}-${monthNumber}-${lastDayOfMonth}`}
-                                    onChange={(e) => handleDateChange(e.target.value)}
+                                    onChange={(e) => handleDateChange(currentMonth, e.target.value)}
                                 />
                             </td>
                             <td>
@@ -1087,8 +1214,8 @@ export default function GivingTool(){
                                         name="text"
                                         type="textarea"
                                         placeholder="Enter gift description"
-                                        value={userSelections.description}
-                                        onChange={(e) => handleDescriptionChange(e.target.value)}
+                                        value={userSelections[currentMonth]?.description || ""}
+                                        onChange={(e) => handleDescriptionChange(currentMonth, e.target.value)}
                                     />
                                 </FormGroup>
                             </td>
@@ -1100,16 +1227,19 @@ export default function GivingTool(){
                                 {/* NB: this is a hidden <input> element */}
                                 <input
                                     type="file"
-                                    id="fileInput"
+                                    id={`fileInput-${currentMonth}`} /* id prop references the name of <input> element */
                                     accept=".pdf,.png,.jpg,.jpeg"
                                     style={{ display: 'none' }}
-                                    onChange={handleFileChange}
-                                    ref={fileInputRef}
+                                    onChange={e => handleFileChange(e, currentMonth, activeTab)}
+
+                                    /* here we use run a callback function instead of assigning a value to the ref prop */
+                                    /* the callback assigns each <input> element (when it is rendered in the DOM) to the ref object */
+                                    ref={el => fileInputRefs.current[currentMonth] = el} 
                                 />
                                 {/* display a message when file has been selected */}
-                                {userSelections.receipt && (
+                                {userSelections[currentMonth].receipt && (
                                     <p style={{ fontSize: '0.8rem', marginTop: '5px' }}>
-                                        Selected file: {userSelections.receipt}
+                                        Selected file: {userSelections[currentMonth].receipt}
                                     </p>
                                 )}
                             </td>
