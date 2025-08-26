@@ -180,12 +180,17 @@ export default function GivingTool(){
     //END state 
 
     //START state variable and toggler function for the modal which displays to confirm the submission of a new item
-        //stores the state of the modal (open/closed)
-        const[confirmNewgiftModal, setConfirmNewgiftModal] = useState(false);
+        // null = modal closed, otherwise an object with active indices
+        const [modalContext, setModalContext] = useState(null);
 
-        //function which opens/closes modal (by reversing the modal state)
-        const modalToggle = () => {
-            setConfirmNewgiftModal((prevState) => !prevState);
+        // Open modal for a specific context
+        const openModal = (mnthIndex, yrIndex) => {
+            setModalContext({ mnthIndex, yrIndex });
+        };
+
+        // Close modal (set context to null)
+        const closeModal = () => {
+            setModalContext(null);
         };
         
     //END state
@@ -484,8 +489,8 @@ export default function GivingTool(){
 
         //1- runs when user clicks the 'Upload Receipt' Button. When this occurs, the handler programmatically clicks 
         // the hidden <input type="file"> element which opens up the fs dialogue box, and prompts user to choose file
-        const openFs = () => {
-            document.getElementById('fileInput').click();
+        const openFs = (month) => {
+            document.getElementById(`fileInput-${month}`).click();
         };
 
         //2- handler is called automatically when user has selected a file from fs
@@ -586,7 +591,7 @@ export default function GivingTool(){
         //useEffect hook which runs once everytime the page is first rendered, to obtain and set the tabLabels state array
         useEffect(() => {
             const year = new Date().getFullYear();
-            const labels = [];
+            let labels = [];
             for (let x = 0; x < 5; x++) {
                 labels.push(year - x);
             }
@@ -637,7 +642,10 @@ export default function GivingTool(){
         }
 
         //handler which runs when the user has clicked the 'Submit New Gift' Button (after entering new gift details)
-        const handleSubmit = async () => {
+        const handleSubmit = async (mContext) => {
+
+            //extract the current month from modalContext state (passed in)
+            
 
             const url = 'http://localhost:3001/gifts/update_gift_items';
 
@@ -810,8 +818,8 @@ export default function GivingTool(){
         };
 
         //function which assigns a bool value to the disabled prop of the 'Submit New Gift' Button (to enable/disable it)
-        const shouldDisableSubmit = () => {
-            const { giftType, organisation, amount, date, description, receipt } = userSelections;
+        const shouldDisableSubmit = (month) => {
+            const { giftType, organisation, amount, date, description, receipt } = userSelections[month];
             console.log("userSelections:",userSelections);
 
             if (
@@ -1221,7 +1229,7 @@ export default function GivingTool(){
                             </td>
                             <td>
                                 {/* column 5 displays an 'Upload Receipt' Button which prompts the user to upload a receipt file */}
-                                <Button color="info" onClick={() => openFs()}>
+                                <Button color="info" onClick={() => openFs(currentMonth)}>
                                     Upload Receipt
                                 </Button>
                                 {/* NB: this is a hidden <input> element */}
@@ -1285,11 +1293,12 @@ export default function GivingTool(){
                                 {renderTableHeaders("bottom")}
                                 {renderTableRows("bottom", activeMonth)}
                             </StyledTable>
-                            <Button 
+                            <Button
+                                id={`submit-gift-${yrIndex}-${mnthIndex}`}
                                 color="primary" 
                                 size='lg'
-                                disabled={shouldDisableSubmit()} // clear and accurate
-                                onClick={()=> modalToggle()}
+                                disabled={shouldDisableSubmit(activeMonth)} // clear and accurate
+                                onClick={()=> openModal(mnthIndex, yrIndex)}
                             >
                                 Submit New Gift
                             </Button>
@@ -1363,20 +1372,23 @@ export default function GivingTool(){
                 </TabContent>
                 {/* Modal JSX */}
                 <div>
-                    <Modal isOpen={confirmNewgiftModal} toggle={modalToggle}>
-                        <ModalHeader toggle={modalToggle}>Confirm New Gift?</ModalHeader>
+                    <Modal isOpen={modalContext !== null} onClose={closeModal}>
+                        {/* Use modalContext.mnthIndex and modalContext.yrIndex to render correct content */}
+                        <ModalHeader toggle={closeModal}>
+                            Confirm New Gift{modalContext && ` (${months[modalContext.mnthIndex]}, ${years[modalContext.yrIndex]})`}
+                        </ModalHeader>
                         <ModalBody>
                             <p>Are you sure you want to add this new gift/donation?</p>
 
                             <br/>
                             <div>
-                                <em>gift type: </em>{userSelections.giftType}
+                                <em>gift type: </em>{userSelections[Object.keys(userSelections)[mnthIndex]].giftType}
                             </div>
                             <div>
-                                <em>Organisation:</em> {userSelections.organisation?.entityName || "—"}
+                                <em>Organisation:</em> {userSelections[Object.keys(userSelections)[mnthIndex]].organisation?.entityName || "—"}
                             </div>
                             {
-                                Object.entries(userSelections).map(([key, val], index) => {
+                                Object.entries(userSelections[Object.keys(userSelections)[mnthIndex]]).map(([key, val], index) => {
                                     const TWO = 2;
                                     if(index < TWO) return null; //skip the first 2 object properties
 
@@ -1396,10 +1408,10 @@ export default function GivingTool(){
                                     //first cache the current userSelections state
                                     //cachedUserSelections.current = userSelections;
 
-                                    handleSubmit(); // 🔄 Start async in background
+                                    handleSubmit(modalContext); // Pass context if needed
 
                                     //close modal
-                                    modalToggle();
+                                    closeModal();
 
                                 }}
                             >
