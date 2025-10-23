@@ -55,6 +55,13 @@ export default function GivingTool(){
 
     //END retrieve
 
+    // START months array
+        const months = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+            ];
+    // END months
+
     //START state variable to store the user's donations (array of gift objects) returned from the server
         //initialise as an object with 12 properties (months), each storing an array of giftObjects
         // whenever page loads (or user toggles a different folder tab), userGifts for that year is retrieved 
@@ -186,6 +193,10 @@ export default function GivingTool(){
         // Open modal for a specific context
         const openModal = (mnthIndex, yrIndex) => {
             setModalContext({ mnthIndex, yrIndex });
+            /* 
+                this is the same as writing the following:
+                setModalContext({ mnthIndex: mnthIndex, yrIndex: yrIndex });
+            */
         };
 
         // Close modal (set context to null)
@@ -644,7 +655,9 @@ export default function GivingTool(){
         //handler which runs when the user has clicked the 'Submit New Gift' Button (after entering new gift details)
         const handleSubmit = async (mContext) => {
 
-            //extract the current month from modalContext state (passed in)
+            //extract the current month and year from modalContext state (passed in)
+            const month = months[mContext.mnthIndex];
+            const year = tabLabels[mContext.yrIndex];
             
 
             const url = 'http://localhost:3001/gifts/update_gift_items';
@@ -654,7 +667,7 @@ export default function GivingTool(){
             //construct a payload
             const payload = {
                 UserId: userId,
-                NewGift: userSelections
+                NewGift: userSelections[month]
             };
 
             //check the payload
@@ -1374,56 +1387,62 @@ export default function GivingTool(){
                 <div>
                     <Modal isOpen={modalContext !== null} onClose={closeModal}>
                         {/* Use modalContext.mnthIndex and modalContext.yrIndex to render correct content */}
-                        <ModalHeader toggle={closeModal}>
-                            Confirm New Gift{modalContext && ` (${months[modalContext.mnthIndex]}, ${years[modalContext.yrIndex]})`}
-                        </ModalHeader>
-                        <ModalBody>
-                            <p>Are you sure you want to add this new gift/donation?</p>
+                        {modalContext && (
+                            <>
+                                <ModalHeader toggle={closeModal}>
+                                    Confirm New Gift{modalContext && ` (${months[modalContext.mnthIndex]}, ${tabLabels[modalContext.yrIndex]})`}
+                                </ModalHeader>
+                                <ModalBody>
+                                    <p>Are you sure you want to add this new gift/donation?</p>
 
-                            <br/>
-                            <div>
-                                <em>gift type: </em>{userSelections[Object.keys(userSelections)[mnthIndex]].giftType}
-                            </div>
-                            <div>
-                                <em>Organisation:</em> {userSelections[Object.keys(userSelections)[mnthIndex]].organisation?.entityName || "—"}
-                            </div>
-                            {
-                                Object.entries(userSelections[Object.keys(userSelections)[mnthIndex]]).map(([key, val], index) => {
-                                    const TWO = 2;
-                                    if(index < TWO) return null; //skip the first 2 object properties
+                                    <br/>
+                                    <div>
+                                        {/*             e.g. userSelections.October.giftType */}
+                                        <em>gift type: </em>{userSelections[Object.keys(userSelections)[modalContext.mnthIndex]].giftType}
+                                    </div>
+                                    <div>
+                                        <em>Organisation:</em> {userSelections[Object.keys(userSelections)[modalContext.mnthIndex]].organisation?.entityName || "—"}
+                                    </div>
+                                    {
+                                        Object.entries(userSelections[Object.keys(userSelections)[modalContext.mnthIndex]]).map(([key, val], index) => {
+                                            const TWO = 2;
+                                            if(index < TWO) return null; //skip the first 2 object properties
 
-                                    return(
-                                        <div key={key}>
-                                            <em>{key}: </em> {val instanceof File ? val.name : String(val)}
-                                        </div>
-                                    )
-                                })
-                            }
-                        </ModalBody>
-                        <ModalFooter>
-                            <Button
-                                color="success"
-                                onClick={() => {
+                                            return(
+                                                <div key={key}>
+                                                    <em>{key}: </em> {val instanceof File ? val.name : String(val)}
+                                                </div>
+                                            )
+                                        })
+                                    }
+                                </ModalBody>
+                                <ModalFooter>
+                                    <Button
+                                        color="success"
+                                        onClick={() => {
 
-                                    //first cache the current userSelections state
-                                    //cachedUserSelections.current = userSelections;
+                                            //first cache the current userSelections state
+                                            //cachedUserSelections.current = userSelections;
 
-                                    handleSubmit(modalContext); // Pass context if needed
+                                            handleSubmit(modalContext); // Pass context if needed
 
-                                    //close modal
-                                    closeModal();
+                                            //close modal
+                                            closeModal();
 
-                                }}
-                            >
-                                Confirm
-                            </Button>
-                            <Button color="danger" onClick={()=> {
-                                //close modal but don't reset state
-                                modalToggle();
-                            }}>
-                                Cancel
-                            </Button>
-                        </ModalFooter>
+                                        }}
+                                    >
+                                        Confirm
+                                    </Button>
+                                    <Button color="danger" onClick={()=> {
+                                        //close modal but don't reset state
+                                        closeModal();
+                                    }}>
+                                        Cancel
+                                    </Button>
+                                </ModalFooter>
+                            </>
+                        )}
+                        
 
                     </Modal>
                 </div>
