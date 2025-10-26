@@ -498,19 +498,6 @@ export default function GivingTool(){
         // the userSelections.receipt object.property for this purpose
         // handlers are defined here in the order that they are called
 
-        //1- runs when user clicks the 'Upload Receipt' Button. When this occurs, the handler programmatically clicks 
-        // the hidden <input type="file"> element which opens up the fs dialogue box, and prompts user to choose file
-        const openFs = (month) => {
-            document.getElementById(`fileInput-${month}`).click();
-        };
-
-        //2- handler is called automatically when user has selected a file from fs
-        /* 
-            0-It receives the file object (event.target.files[0]), and 1-sends it to the server in a POST request.
-            The server stores the file in its /uploads folder, and then returns the url path of the saved file.
-            2-The url path then is used to update the userSelections.file
-        */
-
         //START reference variable to store the file <input> elements in the DOM
             // here we create an object (fileInputRefs) which will store a a pointer value in its properties
             //each pointer references a unique <input> element from the DOM
@@ -528,23 +515,50 @@ export default function GivingTool(){
 
         //END reference
 
+        //1- runs when user clicks the 'Upload Receipt' Button. When this occurs, the handler programmatically clicks 
+        // the hidden <input type="file"> element which opens up the fs dialogue box, and prompts user to choose file
+        /* openFs: clear the input.value before opening so selecting the same file fires change */
+        const openFs = (month) => {
+            // prefer the ref (React way), fallback to document.getElementById
+            const input = fileInputRefs.current?.[month] || document.getElementById(`fileInput-${month}`);
+            if (!input) return;
+            try {
+                // clear previous value so selecting the same file triggers onChange
+                input.value = null;
+            } catch (err) {
+                // some environments might throw; ignore
+            }
+            input.click();
+        };
 
+        //2- handler is called automatically when user has selected a file from fs
+        /* 
+            0-It receives the file object (event.target.files[0]), and 1-sends it to the server in a POST request.
+            The server stores the file in its /uploads folder, and then returns the url path of the saved file.
+            2-The url path then is used to update the userSelections.file
+        */
+
+        
+
+
+        /* handleFileChange: guard against cancel and upload as before */
         const handleFileChange = async (event, month, year) => {
+            const selectedFile = event?.target?.files?.[0];
+            if (!selectedFile) {
+                // user cancelled or no file selected — do nothing
+                return;
+            }
 
-            //0- extract the file obj (the user selected file) from the DOM, store it in formData object
-            const selectedFile = event.target.files[0];
             const formData = new FormData();
             formData.append("receipt", selectedFile);
 
-            //1- send to server 
-            const url = `http://localhost:3001/gifts/upload_receipt?month=${month}&year=${year}`; //updated to use query parameters
+            const url = `http://localhost:3001/gifts/upload_receipt?month=${month}&year=${year}`;
 
-            
-            try{
-                const uploadResponse = await fetch(url,{
+            try {
+                const uploadResponse = await fetch(url, {
                     method: "POST",
                     body: formData,
-                })
+                });
 
                 if (!uploadResponse.ok) {
                     console.error(`Server error: ${uploadResponse.status}`);
@@ -553,7 +567,6 @@ export default function GivingTool(){
 
                 const { fileUrl } = await uploadResponse.json();
 
-                //2-update userSelections.receipt with the url
                 if (fileUrl) {
                     setUserSelections((prevState) => ({
                         ...prevState,
@@ -561,16 +574,13 @@ export default function GivingTool(){
                             ...prevState[month],
                             receipt: fileUrl
                         }
-                        
                     }));
                 } else {
                     console.error("Upload succeeded but no fileUrl returned!");
                 }
-
-            }catch(error){
+            } catch (error) {
                 console.error('Fetch error to the upload_receipt route:', error);
             }
-
         };
         
         
@@ -823,9 +833,18 @@ export default function GivingTool(){
                     December:''
                 });
 
-                //reset the file input ref variable
-                if (fileInputRefs.current) {
-                    fileInputRefs.current.value = null;
+                // CORRECTLY reset all file input elements stored in the ref object
+                if (fileInputRefs.current && typeof fileInputRefs.current === 'object') {
+                    Object.keys(fileInputRefs.current).forEach((key) => {
+                        const el = fileInputRefs.current[key];
+                        if (el && 'value' in el) {
+                            try {
+                                el.value = null;
+                            } catch (err) {
+                                // ignore if cannot set
+                            }
+                        }
+                    });
                 }
             }
         };
