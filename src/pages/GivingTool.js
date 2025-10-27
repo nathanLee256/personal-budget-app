@@ -519,8 +519,11 @@ export default function GivingTool(){
         // the hidden <input type="file"> element which opens up the fs dialogue box, and prompts user to choose file
         /* openFs: clear the input.value before opening so selecting the same file fires change */
         const openFs = (month) => {
-            // prefer the ref (React way), fallback to document.getElementById
+
+            // select and assign the JS object representation of the hidden <input> el that the user clicked
+            // try to select/assign first using the ref variable, and if this doesn't work use the DOM method
             const input = fileInputRefs.current?.[month] || document.getElementById(`fileInput-${month}`);
+
             if (!input) return;
             try {
                 // clear previous value so selecting the same file triggers onChange
@@ -531,15 +534,12 @@ export default function GivingTool(){
             input.click();
         };
 
-        //2- handler is called automatically when user has selected a file from fs
+        //2- the handler below is called automatically whenever user has selected a file from fs
         /* 
             0-It receives the file object (event.target.files[0]), and 1-sends it to the server in a POST request.
             The server stores the file in its /uploads folder, and then returns the url path of the saved file.
             2-The url path then is used to update the userSelections.file
         */
-
-        
-
 
         /* handleFileChange: guard against cancel and upload as before */
         const handleFileChange = async (event, month, year) => {
