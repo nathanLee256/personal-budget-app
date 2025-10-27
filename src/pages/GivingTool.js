@@ -55,6 +55,13 @@ export default function GivingTool(){
 
     //END retrieve
 
+    // START months array
+        const months = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+            ];
+    // END months
+
     //START state variable to store the user's donations (array of gift objects) returned from the server
         //initialise as an object with 12 properties (months), each storing an array of giftObjects
         // whenever page loads (or user toggles a different folder tab), userGifts for that year is retrieved 
@@ -126,26 +133,30 @@ export default function GivingTool(){
 
     //END Collapse 
 
-    //START State object and toggler function for the 2 dropdowns 
-        //array of bool values which represent the isOpen state of the two dropdowns in the Collapse JSX of the 2025 tab
-        //The 2 dropdowns are located in the first 2 columns
+    //START State object and toggler function for dropdown in column 0 
+        //array of bool values which represent the isOpen state of the dropdown in the Collapse JSX for each month in the 2025 tab
         //each dropdown component is referenced by: dropdownOpen[colIndex]
-        const [dropdown, setDropdown] = useState({
-            columnOne: {
-                dropdownOpen: false,
-            },
-            columnTwo: {
-                dropdownOpen: false,
-            }
+
+        const [dropdownOpen, setDropdownOpen] = useState({
+            January: false,     //12 properties to store the state of 12 dropdowns- one for each month of the activeTab year
+            February: false,    //initialise all as false- i.e. dropdowns are initially closed
+            March: false,
+            April: false,
+            May: false,
+            June: false,
+            July: false,
+            August: false,
+            September: false,
+            October: false,
+            November: false,
+            December: false
         });
 
-        //toggler function which reverses the isOpen state of a dropdown which is referenced by its colIndex
-        const toggleDropdown = (colIndex) => {
-            setDropdown((prevState) => ({
+        //toggler function which reverses the isOpen state of a dropdown which is referenced by the currentMonth 
+        const toggleDropdown = (month) => {
+            setDropdownOpen((prevState) => ({
                 ...prevState,
-                [colIndex]: {
-                    dropdownOpen: !prevState[colIndex].dropdownOpen
-                }
+                [month]: !prevState[month] //reverse the value of the selected month to open/close it
             }));     
         }
         // array of gift types for the columnOne dropdown menu
@@ -176,27 +187,168 @@ export default function GivingTool(){
     //END state 
 
     //START state variable and toggler function for the modal which displays to confirm the submission of a new item
-        //stores the state of the modal (open/closed)
-        const[confirmNewgiftModal, setConfirmNewgiftModal] = useState(false);
+        // null = modal closed, otherwise an object with active indices
+        const [modalContext, setModalContext] = useState(null);
 
-        //function which opens/closes modal (by reversing the modal state)
-        const modalToggle = () => {
-            setConfirmNewgiftModal((prevState) => !prevState);
+        // Open modal for a specific context
+        const openModal = (mnthIndex, yrIndex) => {
+            setModalContext({ mnthIndex, yrIndex });
+            /* 
+                this is the same as writing the following:
+                setModalContext({ mnthIndex: mnthIndex, yrIndex: yrIndex });
+            */
+        };
+
+        // Close modal (set context to null)
+        const closeModal = () => {
+            setModalContext(null);
         };
         
     //END state
 
     //START state variables and handlers/helpers for the autosuggest functionality
 
+        //state object to store user selections: will be used to append new object to userGifts when user has entered all data
+        // This is an object with 12 properties. The userSelections state will store 12 objects,
+        // which store the user's selections from the interactive elements in the bottom table of each Collapse(month) JSX
+        const [userSelections, setUserSelections] = useState({
+            January: {
+                giftType: "",
+                organisation: null, //will store an {organisation} object with entityName, abn, and orgId properties
+                amount: 0,
+                date:"",    //e.g. "2025-06-27"
+                description: "",
+                receipt: "",   // will store the url string where the file is stored on server
+            },
+            February: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            March: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            April: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            May: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            June: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            July: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            August: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            September: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            October: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            November: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+            December: {
+                giftType: "",
+                organisation: null, 
+                amount: 0,
+                date:"",    
+                description: "",
+                receipt: "",   
+            },
+        }); 
+
         // array stores the full list of DGR's from the database
+        //we only need 1 orgList and 1 useEffect which runs once when the page loads, to fetch the DGR's and populate orgList,
+        //which can be used in each of the 12 <autosuggest> components
         const [orgList, setOrgList] = useState([]); 
 
-        // stores the list of DGR suggestions which will populate the menu afer each keystroke of user input
+        // state object which stores a list of DGR suggestions which will populate the dd menu (for each month) afer each 
+        // keystroke of user input for the current month
         // there will be an event handler function which updates the list whenever the user input changes
-        const [orgSuggestions, setOrgSuggestions] = useState([]); 
+        const [orgSuggestions, setOrgSuggestions] = useState({
+            January: [],
+            February: [],
+            March: [],
+            April: [],
+            May: [],
+            June: [],
+            July: [],
+            August: [],
+            September: [],
+            October: [],
+            November: [],
+            December: []
+        }); 
 
-        //stores the current value in the input field
-        const [orgValue, setOrgValue] = useState(''); 
+
+        //state object which stores the current value each (month) autosuggest input field
+        const [orgValue, setOrgValue] = useState({
+            January: '',
+            February: '',
+            March:'',
+            April:'',
+            May:'',
+            June:'',
+            July:'',
+            August:'',
+            September:'',
+            October:'',
+            November:'',
+            December:''
+        });
         
         /* NB: the following functions are listed below in the order that they are called in the process */
 
@@ -252,18 +404,22 @@ export default function GivingTool(){
 
         }, []);
 
-        //1- event handler which runs when user types input into <Autosuggest> input field
-        const onOrgChange = (event, { newValue }) => {
-            setOrgValue(newValue);
+        //1- event handler which runs when user types input into one of the 12 <Autosuggest> input fields
+        const onOrgChange = (month) => (event, { newValue }) => {
+            setOrgValue((prevState) => ({
+                ...prevState,
+                [month] : newValue
+            }));
         };
 
-        // 2a- runs by default every time orgValue state changes, and calls the 2b handler function 
-        const onSuggestionsFetchRequested = ({ value }) => {
-            debouncedFetchSuggestions(value);
+        // 2a- runs by default every time the orgValue state (of one of the autosuggest components) changes, and calls the 2b 
+        // handler function 
+        const onSuggestionsFetchRequested = (month) => ({ value }) => {
+            debouncedFetchSuggestions(month, value);
         };
 
         //2b- debounce() which Filters the full org list to get matches based on current input
-        const debouncedFetchSuggestions = debounce((value) => {
+        const debouncedFetchSuggestions = debounce((month, value) => {
             const inputValue = value.trim().toLowerCase();
             const inputLength = inputValue.length;
 
@@ -272,8 +428,12 @@ export default function GivingTool(){
             );
 
             const limited = filtered.slice(0, 10); // only show top 10 matches
-            setOrgSuggestions(limited);
-        }, 150); // 150ms delay
+
+            setOrgSuggestions(prev => ({
+                ...prev,
+                [month]: limited
+            }));
+        }, 150); //150ms delay
 
         // 3- helper function which renders each suggestion in the dropdown list
         const renderSuggestion = (suggestion) => (
@@ -284,49 +444,50 @@ export default function GivingTool(){
         const getSuggestionValue = (suggestion) => suggestion.entityName;
 
         //5- event handler function which runs when the user has made a selection from dropdown list. It updates the userSelections state
-        const onSuggestionSelected = (event, { suggestion }) => {
+        const onSuggestionSelected = (month) => (event, { suggestion }) => {
             setUserSelections(prev => ({
                 ...prev,
-                organisation: suggestion
+                [month] : {
+                    ...prev[month],
+                    organisation: suggestion
+                }
             }));
         };
         
         // 6-helper/cleanup function which Clears the suggestions list (called when input is cleared or blurred)
-        const onSuggestionsClearRequested = () => {
-            setOrgSuggestions([]);
+        const onSuggestionsClearRequested = (month) => () => {
+            setOrgSuggestions(prev => ({
+                ...prev,
+                [month]: []
+            }));
         };
 
         //7- useEffect hook to allow user to add a custom organisation value (not found in autosuggest list)
         useEffect(() => {
+            Object.keys(orgValue).forEach(month => {
+                const inputValue = orgValue[month]?.trim() || '';
+                const matchedSuggestion = orgList.find(
+                    (org) => org.entityName.toLowerCase() === inputValue.toLowerCase()
+                );
 
-            // first we double-check that the orgValue (current user input) is not in orgList(list of dgr's).
-            // if it is, then matchedSuggestion will be assigned an organisation object e.g. 
-            // {"entityName": "Salvation Army", "abn": 1234567, "orgId": 1}
-
-            const matchedSuggestion = orgList.find(
-                (org) => org.entityName.toLowerCase() === orgValue.trim().toLowerCase()
-            );
-
-            //then this block runs if there were no matches, and orgValue is not an empty string
-            // in this case we need to update userSelections.organisation with a new object (using the current orgValue string)
-            if (!matchedSuggestion && orgValue.trim() !== '') {
-
-                //and here we check if the user has previously selected a org from list, then changed their mind
-                // in which case currentOrg will hold the name of the previous selection 
-                //in this case the inner if condition runs which overwrites/updates the userSelections.organisation state
-                const currentOrg = userSelections.organisation?.entityName || '';
-                if (currentOrg !== orgValue.trim()) {
-                    setUserSelections(prev => ({
-                        ...prev,
-                        organisation: {
-                            entityName: orgValue.trim(),
-                            orgId: null,
-                            abn: null
-                        }
-                    }));
+                if (!matchedSuggestion && inputValue !== '') {
+                    const currentOrg = userSelections[month]?.organisation?.entityName || '';
+                    if (currentOrg !== inputValue) {
+                        setUserSelections(prev => ({
+                            ...prev,
+                            [month]: {
+                                ...prev[month],
+                                organisation: {
+                                    entityName: inputValue,
+                                    orgId: null,
+                                    abn: null
+                                }
+                            }
+                        }));
+                    }
                 }
-            }
-        }, [orgValue]);
+            });
+        }, [orgValue, orgList, userSelections]);
 
 
     //END state
@@ -337,10 +498,37 @@ export default function GivingTool(){
         // the userSelections.receipt object.property for this purpose
         // handlers are defined here in the order that they are called
 
+        //START reference variable to store the file <input> elements in the DOM
+            // here we create an object (fileInputRefs) which will store a a pointer value in its properties
+            //each pointer references a unique <input> element from the DOM
+            /* 
+                fileInputRefs = {
+                    current: {
+                        January: <input id="fileInput-January">,
+                        February: <input id="fileInput-February">,
+                        ...fileInputRefs.current
+                    }
+                }
+            
+            */
+            const fileInputRefs = useRef({});
+
+        //END reference
+
         //1- runs when user clicks the 'Upload Receipt' Button. When this occurs, the handler programmatically clicks 
         // the hidden <input type="file"> element which opens up the fs dialogue box, and prompts user to choose file
-        const openFs = () => {
-            document.getElementById('fileInput').click();
+        /* openFs: clear the input.value before opening so selecting the same file fires change */
+        const openFs = (month) => {
+            // prefer the ref (React way), fallback to document.getElementById
+            const input = fileInputRefs.current?.[month] || document.getElementById(`fileInput-${month}`);
+            if (!input) return;
+            try {
+                // clear previous value so selecting the same file triggers onChange
+                input.value = null;
+            } catch (err) {
+                // some environments might throw; ignore
+            }
+            input.click();
         };
 
         //2- handler is called automatically when user has selected a file from fs
@@ -350,26 +538,27 @@ export default function GivingTool(){
             2-The url path then is used to update the userSelections.file
         */
 
-        //START reference variable to store the file <input> element in the DOM
-            const fileInputRef = useRef(null);
+        
 
-        //END reference
-        const handleFileChange = async (event) => {
 
-            //0- extract the file obj (the user selected file) from the DOM, store it in formData object
-            const selectedFile = event.target.files[0];
+        /* handleFileChange: guard against cancel and upload as before */
+        const handleFileChange = async (event, month, year) => {
+            const selectedFile = event?.target?.files?.[0];
+            if (!selectedFile) {
+                // user cancelled or no file selected — do nothing
+                return;
+            }
+
             const formData = new FormData();
             formData.append("receipt", selectedFile);
 
-            //1- send to server 
-            const url = 'http://localhost:3001/gifts/upload_receipt';
+            const url = `http://localhost:3001/gifts/upload_receipt?month=${month}&year=${year}`;
 
-            
-            try{
-                const uploadResponse = await fetch(url,{
+            try {
+                const uploadResponse = await fetch(url, {
                     method: "POST",
                     body: formData,
-                })
+                });
 
                 if (!uploadResponse.ok) {
                     console.error(`Server error: ${uploadResponse.status}`);
@@ -378,20 +567,20 @@ export default function GivingTool(){
 
                 const { fileUrl } = await uploadResponse.json();
 
-                //2-update userSelections.receipt with the url
                 if (fileUrl) {
                     setUserSelections((prevState) => ({
                         ...prevState,
-                        receipt: fileUrl,
+                        [month]: {
+                            ...prevState[month],
+                            receipt: fileUrl
+                        }
                     }));
                 } else {
                     console.error("Upload succeeded but no fileUrl returned!");
                 }
-
-            }catch(error){
+            } catch (error) {
                 console.error('Fetch error to the upload_receipt route:', error);
             }
-
         };
         
         
@@ -423,7 +612,7 @@ export default function GivingTool(){
         //useEffect hook which runs once everytime the page is first rendered, to obtain and set the tabLabels state array
         useEffect(() => {
             const year = new Date().getFullYear();
-            const labels = [];
+            let labels = [];
             for (let x = 0; x < 5; x++) {
                 labels.push(year - x);
             }
@@ -434,45 +623,52 @@ export default function GivingTool(){
 
     
 
-    //START state object to store user selections: will be used to append new object to userGifts when user has entered all data
-        const [userSelections, setUserSelections] = useState({
-            giftType: "",
-            organisation: null, //will store an {organisation} object with entityName, abn, and orgId properties
-            amount: 0,
-            date:"",    //e.g. "2025-06-27"
-            description: "",
-            receipt: "",   // will store the url string where the file is stored on server
-        });
+    // START State
+        
 
         //handler which runs when user enters a value in the 'amount' column <InputGrouptext> field
-        const handleAmountChange = (val) => {
+        const handleAmountChange = (val, month) => {
             const numeric = Number(val); // convert the string input to a number (e.g. "10" → 10)
             setUserSelections((prevState) => ({
                 ...prevState,
-                amount: isNaN(numeric) ? null : numeric
+                [month]: {
+                    ...prevState[month],
+                    amount: isNaN(numeric) ? null : numeric
+                }
             }));
         };
 
         //handler which runs when the user enters/selects a date in the 'date' column
-        const handleDateChange = (newDate) => {
+        const handleDateChange = (month, newDate) => {
             //udpate the userSelections state
             setUserSelections((prevState) => ({
                 ...prevState,
-                date: newDate
+                [month] : {
+                    ...prevState[month],
+                    date: newDate
+                }
             }));
         };
 
         //handler which runs when user enters a description in the 'description' column of bottom table
-        const handleDescriptionChange = (text) => {
+        const handleDescriptionChange = (month, text) => {
             setUserSelections((prevState) => ({
                 ...prevState,
-                description: text
+                [month]: {
+                    ...prevState[month],
+                    description: text
+                }
             }));
 
         }
 
         //handler which runs when the user has clicked the 'Submit New Gift' Button (after entering new gift details)
-        const handleSubmit = async () => {
+        const handleSubmit = async (mContext) => {
+
+            //extract the current month and year from modalContext state (passed in)
+            const month = months[mContext.mnthIndex];
+            const year = tabLabels[mContext.yrIndex];
+            
 
             const url = 'http://localhost:3001/gifts/update_gift_items';
 
@@ -481,7 +677,7 @@ export default function GivingTool(){
             //construct a payload
             const payload = {
                 UserId: userId,
-                NewGift: userSelections
+                NewGift: userSelections[month]
             };
 
             //check the payload
@@ -523,27 +719,139 @@ export default function GivingTool(){
 
                 //reset state
                 setUserSelections({
-                    giftType: "",
-                    organisation: null,
-                    amount: 0,
-                    date: "",
-                    description: "",
-                    receipt: "",
+                    January: {
+                        giftType: "",
+                        organisation: null, //will store an {organisation} object with entityName, abn, and orgId properties
+                        amount: 0,
+                        date:"",    //e.g. "2025-06-27"
+                        description: "",
+                        receipt: "",   // will store the url string where the file is stored on server
+                    },
+                    February: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
+                    March: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
+                    April: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
+                    May: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
+                    June: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
+                    July: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
+                    August: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
+                    September: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
+                    October: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
+                    November: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
+                    December: {
+                        giftType: "",
+                        organisation: null, 
+                        amount: 0,
+                        date:"",    
+                        description: "",
+                        receipt: "",   
+                    },
                 });
 
                 //also reset orgValue
-                setOrgValue('');
+                setOrgValue({
+                    January: '',
+                    February: '',
+                    March:'',
+                    April:'',
+                    May:'',
+                    June:'',
+                    July:'',
+                    August:'',
+                    September:'',
+                    October:'',
+                    November:'',
+                    December:''
+                });
 
-                //reset the file input ref variable
-                if (fileInputRef.current) {
-                    fileInputRef.current.value = null;
+                // CORRECTLY reset all file input elements stored in the ref object
+                if (fileInputRefs.current && typeof fileInputRefs.current === 'object') {
+                    Object.keys(fileInputRefs.current).forEach((key) => {
+                        const el = fileInputRefs.current[key];
+                        if (el && 'value' in el) {
+                            try {
+                                el.value = null;
+                            } catch (err) {
+                                // ignore if cannot set
+                            }
+                        }
+                    });
                 }
             }
         };
 
         //function which assigns a bool value to the disabled prop of the 'Submit New Gift' Button (to enable/disable it)
-        const shouldDisableSubmit = () => {
-            const { giftType, organisation, amount, date, description, receipt } = userSelections;
+        const shouldDisableSubmit = (month) => {
+            const { giftType, organisation, amount, date, description, receipt } = userSelections[month];
             console.log("userSelections:",userSelections);
 
             if (
@@ -565,8 +873,8 @@ export default function GivingTool(){
 
     //START event handlers
         
-        //runs when user selects a gift type from column 1 of table (when prompted to enter the dets of a new gift)
-        const handleTypeSelect = (type) => {
+        //runs when user selects a gift type from column 0 of table (when prompted to enter the dets of a new gift)
+        const handleTypeSelect = (type, month) => {
 
             //check that function runs
             console.log("✅ handleTypeSelect is firing!"); 
@@ -574,10 +882,13 @@ export default function GivingTool(){
             //update the dropdown state obj to display the selected gift type in the DropdownToggle
             setUserSelections((prevState) => ({
                 ...prevState,
-                giftType: type
+                [month]: {
+                    ...prevState[month],
+                    giftType: type
+                }
             }))
             //now close the dropdown
-            toggleDropdown(columnIDs[0]);
+            toggleDropdown(month);
         };
 
         //function runs when user enters input in the Organisation (column 1) in the New Gift table
@@ -870,19 +1181,19 @@ export default function GivingTool(){
                             <td>
                                 {/* column 0 displays a dropdown which prompts the user to enter a gift type */}
                                 <Dropdown
-                                    isOpen={dropdown[columnIDs[0]].dropdownOpen}
-                                    toggle={() => toggleDropdown(columnIDs[0])}
+                                    isOpen={dropdownOpen[currentMonth]}
+                                    toggle={() => toggleDropdown(currentMonth)}
                                 >
                                     <DropdownToggle caret color="info">
-                                        {userSelections.giftType || "Select Type"}
+                                        {userSelections[currentMonth].giftType || "Select Type"}
                                     </DropdownToggle>
                                     <DropdownMenu>
                                         {/* iterate over giftTypes to display DropdownItems */}
                                         {
                                             giftTypes.map((cat, i) => (
                                                 <DropdownItem
-                                                    key={i}
-                                                    onClick={() => handleTypeSelect(cat)}
+                                                    key={`${currentMonth}-${i}`}
+                                                    onClick={() => handleTypeSelect(cat, currentMonth)}
                                                 >{cat}
                                                 </DropdownItem>
                                             ))
@@ -894,24 +1205,23 @@ export default function GivingTool(){
                                 {/* column 1 displays an input field which prompts user to enter the name of the organisation */}
                                 <SuggestionsWrapper>
                                     <Autosuggest
-                                        suggestions={orgSuggestions}
-                                        onSuggestionsFetchRequested={onSuggestionsFetchRequested}
-                                        onSuggestionsClearRequested={onSuggestionsClearRequested}
+                                        suggestions={orgSuggestions[currentMonth] || []}
+                                        onSuggestionsFetchRequested={onSuggestionsFetchRequested(currentMonth)}
+                                        onSuggestionsClearRequested={onSuggestionsClearRequested(currentMonth)}
                                         getSuggestionValue={getSuggestionValue}
                                         renderSuggestion={renderSuggestion}
-                                        onSuggestionSelected={onSuggestionSelected}
+                                        onSuggestionSelected={onSuggestionSelected(currentMonth)}
                                         inputProps={{
                                             placeholder: "Enter organisation",
-                                            value: orgValue,
-                                            onChange: onOrgChange
+                                            value: orgValue[currentMonth] || "",
+                                            onChange: onOrgChange(currentMonth)
                                         }}
                                     />
                                     {
-                                        orgSuggestions.length === 0 && !userSelections.organisation && orgValue ? 
-                                            <p>
-                                                No matches found
-                                            </p> : 
-                                            <></>
+                                        (orgSuggestions[currentMonth]?.length === 0) &&
+                                            !(userSelections[currentMonth]?.organisation) &&
+                                                orgValue[currentMonth] ? 
+                                                    <p>No matches found</p> : null
                                     }
                                 </SuggestionsWrapper>
                             </td>
@@ -920,8 +1230,8 @@ export default function GivingTool(){
                                 <InputGroup>
                                     <InputGroupText>$</InputGroupText> {/* Prepend $ symbol */}
                                     <Input
-                                        value={userSelections.amount}
-                                        onChange={(e) => handleAmountChange(e.target.value)}
+                                        value={userSelections[currentMonth].amount}
+                                        onChange={(e) => handleAmountChange(e.target.value, currentMonth)}
                                         placeholder="Enter amount"
                                     />
                                 </InputGroup>
@@ -930,10 +1240,10 @@ export default function GivingTool(){
                                 {/* column 3  prompts the user to select a date or enter a date */}
                                 <input
                                     type="date"
-                                    value={userSelections.date || `${year}-${monthNumber}-01`}
+                                    value={userSelections[currentMonth]?.date || `${year}-${monthNumber}-01`}
                                     min={`${year}-${monthNumber}-01`}
                                     max={`${year}-${monthNumber}-${lastDayOfMonth}`}
-                                    onChange={(e) => handleDateChange(e.target.value)}
+                                    onChange={(e) => handleDateChange(currentMonth, e.target.value)}
                                 />
                             </td>
                             <td>
@@ -944,29 +1254,32 @@ export default function GivingTool(){
                                         name="text"
                                         type="textarea"
                                         placeholder="Enter gift description"
-                                        value={userSelections.description}
-                                        onChange={(e) => handleDescriptionChange(e.target.value)}
+                                        value={userSelections[currentMonth]?.description || ""}
+                                        onChange={(e) => handleDescriptionChange(currentMonth, e.target.value)}
                                     />
                                 </FormGroup>
                             </td>
                             <td>
                                 {/* column 5 displays an 'Upload Receipt' Button which prompts the user to upload a receipt file */}
-                                <Button color="info" onClick={() => openFs()}>
+                                <Button color="info" onClick={() => openFs(currentMonth)}>
                                     Upload Receipt
                                 </Button>
                                 {/* NB: this is a hidden <input> element */}
                                 <input
                                     type="file"
-                                    id="fileInput"
+                                    id={`fileInput-${currentMonth}`} /* id prop references the name of <input> element */
                                     accept=".pdf,.png,.jpg,.jpeg"
                                     style={{ display: 'none' }}
-                                    onChange={handleFileChange}
-                                    ref={fileInputRef}
+                                    onChange={e => handleFileChange(e, currentMonth, activeTab)}
+
+                                    /* here we use run a callback function instead of assigning a value to the ref prop */
+                                    /* the callback assigns each <input> element (when it is rendered in the DOM) to the ref object */
+                                    ref={el => fileInputRefs.current[currentMonth] = el} 
                                 />
                                 {/* display a message when file has been selected */}
-                                {userSelections.receipt && (
+                                {userSelections[currentMonth].receipt && (
                                     <p style={{ fontSize: '0.8rem', marginTop: '5px' }}>
-                                        Selected file: {userSelections.receipt}
+                                        Selected file: {userSelections[currentMonth].receipt}
                                     </p>
                                 )}
                             </td>
@@ -1012,11 +1325,12 @@ export default function GivingTool(){
                                 {renderTableHeaders("bottom")}
                                 {renderTableRows("bottom", activeMonth)}
                             </StyledTable>
-                            <Button 
+                            <Button
+                                id={`submit-gift-${yrIndex}-${mnthIndex}`}
                                 color="primary" 
                                 size='lg'
-                                disabled={shouldDisableSubmit()} // clear and accurate
-                                onClick={()=> modalToggle()}
+                                disabled={shouldDisableSubmit(activeMonth)} // clear and accurate
+                                onClick={()=> openModal(mnthIndex, yrIndex)}
                             >
                                 Submit New Gift
                             </Button>
@@ -1073,7 +1387,7 @@ export default function GivingTool(){
                                 {
                                     /* Collapse Button */
                                     Object.keys(monthCollapses).map((month, monthIndex) => (
-                                        <React.Fragment key={month}>
+                                        <React.Fragment key={`${year}-${month}`}>
                                             <CollapseButton onClick={() => handleMonthCollapse(month)}>
                                                 {month}
                                             </CollapseButton>
@@ -1090,55 +1404,64 @@ export default function GivingTool(){
                 </TabContent>
                 {/* Modal JSX */}
                 <div>
-                    <Modal isOpen={confirmNewgiftModal} toggle={modalToggle}>
-                        <ModalHeader toggle={modalToggle}>Confirm New Gift?</ModalHeader>
-                        <ModalBody>
-                            <p>Are you sure you want to add this new gift/donation?</p>
+                    <Modal isOpen={modalContext !== null} onClose={closeModal}>
+                        {/* Use modalContext.mnthIndex and modalContext.yrIndex to render correct content */}
+                        {modalContext && (
+                            <>
+                                <ModalHeader toggle={closeModal}>
+                                    Confirm New Gift{modalContext && ` (${months[modalContext.mnthIndex]}, ${tabLabels[modalContext.yrIndex]})`}
+                                </ModalHeader>
+                                <ModalBody>
+                                    <p>Are you sure you want to add this new gift/donation?</p>
 
-                            <br/>
-                            <div>
-                                <em>gift type: </em>{userSelections.giftType}
-                            </div>
-                            <div>
-                                <em>Organisation:</em> {userSelections.organisation?.entityName || "—"}
-                            </div>
-                            {
-                                Object.entries(userSelections).map(([key, val], index) => {
-                                    const TWO = 2;
-                                    if(index < TWO) return null; //skip the first 2 object properties
+                                    <br/>
+                                    <div>
+                                        {/*             e.g. userSelections.October.giftType */}
+                                        <em>gift type: </em>{userSelections[Object.keys(userSelections)[modalContext.mnthIndex]].giftType}
+                                    </div>
+                                    <div>
+                                        <em>Organisation:</em> {userSelections[Object.keys(userSelections)[modalContext.mnthIndex]].organisation?.entityName || "—"}
+                                    </div>
+                                    {
+                                        Object.entries(userSelections[Object.keys(userSelections)[modalContext.mnthIndex]]).map(([key, val], index) => {
+                                            const TWO = 2;
+                                            if(index < TWO) return null; //skip the first 2 object properties
 
-                                    return(
-                                        <div key={key}>
-                                            <em>{key}: </em> {val instanceof File ? val.name : String(val)}
-                                        </div>
-                                    )
-                                })
-                            }
-                        </ModalBody>
-                        <ModalFooter>
-                            <Button
-                                color="success"
-                                onClick={() => {
+                                            return(
+                                                <div key={key}>
+                                                    <em>{key}: </em> {val instanceof File ? val.name : String(val)}
+                                                </div>
+                                            )
+                                        })
+                                    }
+                                </ModalBody>
+                                <ModalFooter>
+                                    <Button
+                                        color="success"
+                                        onClick={() => {
 
-                                    //first cache the current userSelections state
-                                    //cachedUserSelections.current = userSelections;
+                                            //first cache the current userSelections state
+                                            //cachedUserSelections.current = userSelections;
 
-                                    handleSubmit(); // 🔄 Start async in background
+                                            handleSubmit(modalContext); // Pass context if needed
 
-                                    //close modal
-                                    modalToggle();
+                                            //close modal
+                                            closeModal();
 
-                                }}
-                            >
-                                Confirm
-                            </Button>
-                            <Button color="danger" onClick={()=> {
-                                //close modal but don't reset state
-                                modalToggle();
-                            }}>
-                                Cancel
-                            </Button>
-                        </ModalFooter>
+                                        }}
+                                    >
+                                        Confirm
+                                    </Button>
+                                    <Button color="danger" onClick={()=> {
+                                        //close modal but don't reset state
+                                        closeModal();
+                                    }}>
+                                        Cancel
+                                    </Button>
+                                </ModalFooter>
+                            </>
+                        )}
+                        
 
                     </Modal>
                 </div>
