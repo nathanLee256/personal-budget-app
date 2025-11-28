@@ -177,17 +177,19 @@ export default function ImportData() {
       // the Save Data Button will have a "disabled" prop which will be assigned the isSubmitReady state
       // thus when isSubmitReady chnages to true, the Button will be enabled.
 
-      let arrayContainsAString = false;
+      let arrayContainsAString = true;
 
       for(let item in selectedItems){
-        if(typeof item === "string"){
+        if(typeof item === "string" || item == "Select"){
 
+          //early exit as soon as we encounter a null or string element
+          break;
         }
 
       }
-
-
-      return false;
+      //if arrayContainsAString we return true to keep the button disabled. Else, it means that all elements in array are non-null objects and we return false to enable button
+      return (arrayContainsAString) ? true : false ;
+      
     }
 
     // runs every time user adds a budget item
@@ -569,7 +571,7 @@ export default function ImportData() {
             <Button
               color="primary"
               size="lg"
-              disabled={!areAllCategoriesSelected()}
+              disabled={areAllCategoriesSelected()}
               onClick={handleDataSubmit}
             >
               Save Budget Data
