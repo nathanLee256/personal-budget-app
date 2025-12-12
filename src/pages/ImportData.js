@@ -170,26 +170,23 @@ export default function ImportData() {
 
   //START EVENT HANDLERS
 
-    //is called from with handleItemSelect() to enable the Save Data button when user has made a selection in each table row
-    function areAllCategoriesSelected() {
-      // iterate over the selectedItems array and check whether each element is an object
-      // if so, set a new state variable (isSubmitReady-initialised as false), to true.
-      // the Save Data Button will have a "disabled" prop which will be assigned the isSubmitReady state
-      // thus when isSubmitReady chnages to true, the Button will be enabled.
+    /* 
+      areAllCategoriesSelected() assigns a bool value to the disabled attribute of the Save Data button and is therefore called whenever the page reloads due to a state update 
+      (any state including selectedItems). Recall that once the user has uploaded a .csv file, selectedItems[] will become an array of strings (either "Select", or it will be 
+      an object in the following form, after the user has selected a budgetItem category):
 
-      let arrayContainsAString = true;
-
-      for(let item in selectedItems){
-        if(typeof item === "string" || item == "Select"){
-
-          //early exit as soon as we encounter a null or string element
-          break;
-        }
-
+      {
+        "item": "Salary",
+        "amount": 365,
+        "frequency": "annually",
+        "total": 28.08
+      } 
+    */
+    function areAllCategoriesSelected(selectedItems) {
+      if (!Array.isArray(selectedItems) || selectedItems.length === 0) {
+        return false; // function does not run the .every line below until selectedItems has been updated (by useEffect) to an array of "Select" strings the same length as userData
       }
-      //if arrayContainsAString we return true to keep the button disabled. Else, it means that all elements in array are non-null objects and we return false to enable button
-      return (arrayContainsAString) ? true : false ;
-      
+      return selectedItems.every(item => typeof item === 'object' && item !== null); // if every returns T, function returns T which should enable button
     }
 
     // runs every time user adds a budget item
@@ -571,7 +568,7 @@ export default function ImportData() {
             <Button
               color="primary"
               size="lg"
-              disabled={areAllCategoriesSelected()}
+              disabled={!areAllCategoriesSelected(selectedItems)}
               onClick={handleDataSubmit}
             >
               Save Budget Data
