@@ -33,11 +33,32 @@ export default function ImportData() {
   const { budgetItems, setBudgetItems } = useAuth();
 
   //START DEFINE State variables for <SelectFile/>
+
+    //userData will be updated to an array of transaction objects after user uploads .csv file
     const [userData, setUserData] = useState([]);
+
+    //debugging useEffect to check the userData state immediately after it is updated (since state updates are asynchronous in React)
+    // can be deleted later
+    useEffect(() => {
+        console.log('userData updated after file upload:', userData);
+    }, [userData]);
+
     const [selectedMonth, setSelectedMonth] = useState("");
     const [selectedYear, setSelectedYear] = useState("");
-    const [selectedWeek, setSelectedWeek] = useState("");
     const [file, setFile] = useState(null);
+
+    //state array to store the last 5 years (from whenever the user loads page)
+    const [yearLabels, setYearLabels] = useState([]);
+
+    //useEffect hook which runs once everytime the page is first rendered, to obtain and set the tabLabels state array
+    useEffect(() => {
+      const year = new Date().getFullYear();
+      let lastFiveYears = [];
+      for (let x = 0; x < 5; x++) {
+        lastFiveYears.push(year - x);
+      }
+      setYearLabels(lastFiveYears);
+    }, []);
    
   // END DEFINE
 
@@ -228,11 +249,94 @@ export default function ImportData() {
     
     /* 
       this function is the handler for the Save Data button at the bottom of page. We need to construct a payload
-      obj which stores the data we need to send to the server route in a POST request which will update the db.
+      obj which stores the data we need to send to the server route in a POST request which will update the db. Most
+      of the data we need to send to the server is already contained within the userData state array which stores
+      an array of objects (transaction objects) in the following form (after the user has successfully uploaded their .csv file):
+
+      {
+        "id": 2,
+        "header_1": "24/12/2024",
+        "header_2": -65,
+        "header_3": "INDEPAL PTY LTD BRISBANE CITYAU",
+        "header_4": 1149.59
+      }
+      We also have the selected year and month stored in selectedYear and selectedMonth state e.g.:
+
+        selectedYear = 2025;
+        selectedMonth = "January"
+
+      And finally, once the user has categorised each transaction, we will have an array of budgetItem objects in the following form,
+      stored in the selectedItems state array (which is conveniently the same length as userData). From the item property, we
+      can extract the budget item id, or send it to the server which can query the db to find it.
+      {
+        "item": "Salary",
+        "amount": 365,
+        "frequency": "annually",
+        "total": 28.08
+      }
+      NB: I need to rename the 'Amount' and 'Total' columns from the Worksheet tables to Planned Amount/Planned 4-Weekly Amount
+      (or Current Amount/Current 4-Weekly Total) to avoid confusion. This would likely also involve some refactoring. 
+
     */
     const handleDataSubmit = async (e) => {
       
+      //define the route url
       const url = 'http://localhost:3001/import_data/save_budget_data';
+
+      // we need to transform the data stored in userData
+      let userDataCopy = [...userData];
+      let parsedPayload = [];
+      const ONE = 1;
+
+      if(Array.isArray(userDataCopy) && userDataCopy.length > ONE){
+
+        //iterate over parallel arrays and append the budgetItem name to the userData array
+        for(let i=0; i < userDataCopy.length; i++){
+          let budgetItemname = selectedItems[i].item;
+          const updatedObj = {
+            ...userDataCopy[i],
+            itemName: budgetItemname
+          }
+          parsedPayload.push(updatedObj);
+        };
+
+      }
+
+      //check the parsedPayload array of objects. Each object should be in the following form:
+      /* 
+        {
+          id: 2,
+          header_1: "24/12/2024",
+          header_2: -65,
+          header_3: "INDEPAL PTY LTD BRISBANE CITYAU",
+          header_4: 1149.59,
+          itemName: "Salary"
+        }
+      
+      */
+      
+
+
+      
+
+
+      
+      //prepare the payload obj to be sent to server
+      try{
+        const payload = {
+          userId: userId,
+          month: selectedMonth,
+          year: selectedYear,
+          transactions: parsedPayload
+        }
+
+
+
+
+      }catch(error){
+
+      }
+
     };
 
 
@@ -563,7 +667,7 @@ export default function ImportData() {
       <SubWrapper>
         <StyledContainer>
           <h2>
-            Transactions for Week {selectedWeek}, {selectedMonth}, {selectedYear}
+            Transactions for {selectedMonth}, {selectedYear}
           </h2>
           <StyledTable bordered striped>
             {renderTableHeaders()}
@@ -665,8 +769,8 @@ export default function ImportData() {
       <> 
         <SelectFile
 
-          selectedWeek={selectedWeek}
-          setSelectedWeek={setSelectedWeek}
+          yearLabels={yearLabels}
+          setYearLabels={setYearLabels}
 
           selectedMonth={selectedMonth}
           setSelectedMonth={setSelectedMonth}
