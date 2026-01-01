@@ -11,21 +11,20 @@ import { Button } from 'reactstrap';
 
 //first receive the props and assign them to variables
 export default function SelectFile({
-    selectedWeek, setSelectedWeek,
+    yearLabels, setYearLabels,
     selectedMonth, setSelectedMonth,
     selectedYear, setSelectedYear,
     file, setFile,
     userData, setUserData
 }){
 
+
     // START DEFINE constants for years, months, weeks, and the category map
 
-        const years = [2021, 2022, 2023, 2024];
         const months = [
             "January", "February", "March", "April", "May", "June",
             "July", "August", "September", "October", "November", "December"
         ];
-        const weeks = [1, 2, 3, 4];
 
     //END DEFINE
 
@@ -39,13 +38,13 @@ export default function SelectFile({
 
         
         const handleMonthChange = (e) => setSelectedMonth(e.target.value);
-        const handleWeekChange = (e) => setSelectedWeek(e.target.value);
         const handleFileChange = (e) => setFile(e.target.files[0]);
         
         
         const handleFileUpload = () => {
             document.getElementById('fileInput').click();
         };
+
 
 
         const handleSubmit = async (e) => {
@@ -96,7 +95,7 @@ export default function SelectFile({
                             <label htmlFor="year">Select Year:</label>
                             <select id="year" value={selectedYear} onChange={handleYearChange}>
                                 <option value="">--Select Year--</option>
-                                {years.map((year) => (
+                                {yearLabels.map((year) => (
                                 <option key={year} value={year}>{year}</option>
                                 ))}
                             </select>
@@ -108,17 +107,6 @@ export default function SelectFile({
                                 <option value="">--Select Month--</option>
                                 {months.map((month, index) => (
                                     <option key={index} value={month}>{month}</option>
-                                ))}
-                                </select>
-                            </DropdownWrapper>
-                        )}
-                        {selectedMonth && (
-                            <DropdownWrapper>
-                                <label htmlFor="week">Select Week:</label>
-                                <select id="week" value={selectedWeek} onChange={handleWeekChange}>
-                                <option value="">--Select Week--</option>
-                                {weeks.map((week, index) => (
-                                    <option key={index} value={week}>{week}</option>
                                 ))}
                                 </select>
                             </DropdownWrapper>
