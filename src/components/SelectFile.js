@@ -49,7 +49,7 @@ export default function SelectFile({
 
 
         const handleSubmit = async (e) => {
-            const url = 'http://localhost:3001/upload_2';
+            const url = 'http://localhost:3001/import_data/upload_2';
             e.preventDefault();
             if (file) {
                 const formData = new FormData();

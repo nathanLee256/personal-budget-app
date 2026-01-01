@@ -225,9 +225,14 @@ export default function ImportData() {
     }
 
     
-    //handler for the Save Data button at the bottom of page
+    
+    /* 
+      this function is the handler for the Save Data button at the bottom of page. We need to construct a payload
+      obj which stores the data we need to send to the server route in a POST request which will update the db.
+    */
     const handleDataSubmit = async (e) => {
-      //TBA
+      
+      const url = 'http://localhost:3001/import_data/save_budget_data';
     };
 
 

@@ -356,7 +356,7 @@ export default function GivingTool(){
         useEffect(() => {
 
             //fetch
-            const url = "http://localhost:3001/gifts/retrieve_orgs";
+            const url = "http://localhost:3001/giving_tool/retrieve_orgs";
             const options = {
                 method: "GET",
                 headers: {
@@ -552,7 +552,7 @@ export default function GivingTool(){
             const formData = new FormData();
             formData.append("receipt", selectedFile);
 
-            const url = `http://localhost:3001/gifts/upload_receipt?month=${month}&year=${year}`;
+            const url = `http://localhost:3001/giving_tool/upload_receipt?month=${month}&year=${year}`;
 
             try {
                 const uploadResponse = await fetch(url, {
@@ -670,7 +670,7 @@ export default function GivingTool(){
             const year = tabLabels[mContext.yrIndex];
             
 
-            const url = 'http://localhost:3001/gifts/update_gift_items';
+            const url = 'http://localhost:3001/giving_tool/update_gift_items';
 
 
             //here we need to send the current userSelections data a POST request to the server
@@ -912,7 +912,7 @@ export default function GivingTool(){
             // mnth represents the active month (the current month param in the renderTableRows())
             
             // 2. Send DELETE request to server
-            const url = `http://localhost:3001/gifts/delete_gift/${giftID}`;
+            const url = `http://localhost:3001/giving_tool/delete_gift/${giftID}`;
 
             try {
                 const deleteResponse = await fetch(url, {
@@ -985,7 +985,7 @@ export default function GivingTool(){
             }
 
             //perform fetch request (HTTP-GET) to the server route, send it the userId and selectedYear
-            const url = `http://localhost:3001/gifts/retrieve_gift_items?UserId=${userId}&Year=${selectedYear}`;
+            const url = `http://localhost:3001/giving_tool/retrieve_gift_items?UserId=${userId}&Year=${selectedYear}`;
             
             fetch(url, {
                 method: "GET",
