@@ -5,20 +5,51 @@ import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext();
 
-/* This component uses the Context API which allows me to create a context for the application and provide it at the top level, 
-making the state accessible to any child component that needs it. In other words if I declare state variables
-and their respective setState() functions within this component, I can then access them globally within every 
-application component by simply destructuring the them at the top of the child component I want to use them in.
-The syntax to do that is :
-const { authenticated, setAuthenticated, token, setToken } = useContext(AuthContext); 
- This useContext feature of React allows me to avoid having to pass state variables
- declared in the top-level component all the way down through multiple components using props (prop-drilling). 
- This means that the useEffect hook which checks if a user has a valid jwt stored in local storage every 5 minutes 
- needs to be declared in App.js. If you define the useEffect in the App.js component, it will run when the App 
- component mounts and whenever its dependencies change. If the authentication and token state variables are managed 
- in App.js and passed down via context, this can centralize your authentication logic.*/
+/* 
+  This component uses the Context API which allows me to create a context for the application and provide it at the top level, 
+  making the state accessible to any child component that needs it. In other words if I declare state variables
+  and their respective setState() functions within this component, I can then access them globally within every 
+  application component by simply destructuring the them at the top of the child component I want to use them in.
+  The syntax to do that is :
+  const { authenticated, setAuthenticated, token, setToken } = useContext(AuthContext); 
+  This useContext feature of React allows me to avoid having to pass state variables
+  declared in the top-level component all the way down through multiple components using props (prop-drilling). 
+  This means that the useEffect hook which checks if a user has a valid jwt stored in local storage every 5 minutes 
+  needs to be declared in App.js. If you define the useEffect in the App.js component, it will run when the App 
+  component mounts and whenever its dependencies change. If the authentication and token state variables are managed 
+  in App.js and passed down via context, this can centralize your authentication logic.
+*/
 
 const AuthProvider = ({ children }) => {
+  //STATE 0- and useEFFECT to obtain user's location and datetime format
+    const [dateFormat, setDateFormat] = useState('DD/MM/YYYY'); // default
+
+    const countryDateFormat = {
+      US: 'MM/DD/YYYY',
+      AU: 'DD/MM/YYYY',
+      GB: 'DD/MM/YYYY',
+      CN: 'YYYY/MM/DD',
+      // Add more as needed
+    };
+
+    useEffect(() => {
+      fetch('https://ipapi.co/json/')
+        .then(res => res.json())
+        .then(data => {
+          const country = data.country; // e.g., "AU"
+          // Use mapping
+          const format = countryDateFormat[country] || 'DD/MM/YYYY'; // set a safe default!
+          setDateFormat(format);
+          console.log('User country:', country, 'Date format:', format);
+        })
+        .catch(err => {
+          console.error('Geolocation error:', err);
+          // Fallback if error
+          setDateFormat('DD/MM/YYYY');
+        });
+    }, []);
+
+  //END STATE 0
   const [authenticated, setAuthenticated] = useState(false);
   const [token, setToken] = useState(null);
   const [chooseLogin, setChooseLogin] = useState(false);
@@ -159,6 +190,7 @@ const AuthProvider = ({ children }) => {
   
   
   const contextValue = {
+    dateFormat, setDateFormat,
     authenticated, setAuthenticated,
     token, setToken,
     userId, setUserId,

@@ -31,79 +31,104 @@ export default function ImportData() {
   // destructure global state variables
   const { userId, setUserId } = useAuth();
   const { budgetItems, setBudgetItems } = useAuth();
+  const { dateFormat, setDateFormat } = useAuth(); //stores the user's date format
 
-  //START DEFINE State variables for <SelectFile/>
+  //START DEFINE State variables and associated useEffect hooks
 
-    //userData will be updated to an array of transaction objects after user uploads .csv file
-    const [userData, setUserData] = useState([]);
+    //STATE 0- retrieve budgetItems immediately after the component renders (as soon as it is updated in AuthProvider)
+      useEffect(() => {
+        if (!budgetItems || Object.keys(budgetItems).length === 0) return; // ✅ Prevents running when budgetItems is empty
+        console.log("Budget Items Object:", budgetItems);
+      
+      }, [budgetItems]);
 
-    //debugging useEffect to check the userData state immediately after it is updated (since state updates are asynchronous in React)
-    // can be deleted later
-    useEffect(() => {
-        console.log('userData updated after file upload:', userData);
-    }, [userData]);
+    //END STATE 0
 
-    const [selectedMonth, setSelectedMonth] = useState("");
-    const [selectedYear, setSelectedYear] = useState("");
-    const [file, setFile] = useState(null);
+    //STATE 1
+      //state array to store the last 5 years (from whenever the user loads page)
+      const [yearLabels, setYearLabels] = useState([]);
 
-    //state array to store the last 5 years (from whenever the user loads page)
-    const [yearLabels, setYearLabels] = useState([]);
+      //state variable to store the user's locale
+      const [userLocale, setUserLocale] = useState("");
 
-    //useEffect hook which runs once everytime the page is first rendered, to obtain and set the tabLabels state array
-    useEffect(() => {
-      const year = new Date().getFullYear();
-      let lastFiveYears = [];
-      for (let x = 0; x < 5; x++) {
-        lastFiveYears.push(year - x);
-      }
-      setYearLabels(lastFiveYears);
-    }, []);
-   
-  // END DEFINE
+      //useEffect hook which runs once everytime the page is first rendered, to 1-obtain the current year and set the tabLabels state array
+      useEffect(() => {
 
-  //START cache variables 
+        //-1
+        const year = new Date().getFullYear();
+        let lastFiveYears = [];
+        for (let x = 0; x < 5; x++) {
+          lastFiveYears.push(year - x);
+        }
+        setYearLabels(lastFiveYears);
+        
+      }, []);
+    //END STATE 1
 
-    //reference variable to store the latest value(state) of the submenu (activeSubmenu obj)
-    const activeSubmenuRef = useRef(null);
+    //STATE 2-three state variables which will be passed as props to <SelectFile/>. Stores the month/year/file user selects in <SelectFile/>
+      const [selectedMonth, setSelectedMonth] = useState("");
+      const [selectedYear, setSelectedYear] = useState("");
+      const [file, setFile] = useState(null);
+    //END STATE 2
 
-  //END cache variables
+    //STATE 3- userData will be updated to an array of transaction objects (in the following form) after user uploads .csv file. 
+      /*
+        {
+          "id": 2,
+          "header_1": "24/12/2024",
+          "header_2": -65,
+          "header_3": "INDEPAL PTY LTD BRISBANE CITYAU",
+          "header_4": 1149.59
+        } 
+      */
+      const [userData, setUserData] = useState([]);
+    // END STATE 3
 
-  //START DEFINE State variables for this
+    //STATE 4
+      /*  
+        an array initialised as strings which will be displayed in the Toggle of the last column in each table row
+        when the user selects an item, the row index string in the array will be updated to an object in the form:
+        {
+          item: budgItem.item,
+          cat: itemObj.type,
+          secondaryCat: itemObj.secondary,
+          tertiaryCat: itemObj.tertiary,
+        }
+        The obj.item string will then be displayed in the toggle, whenever the state is updated.
+      */
+      const [selectedItems, setSelectedItems] = useState(userData && userData.length > 0 ? userData.map(() => "Select") : []);
 
+      // useEffect to update the selectedItems array when userData changes
+      useEffect(() => {
+        if (Array.isArray(userData) && userData.length > 0) {
+          setSelectedItems(userData.map(() => "Select Item"));
+        }
+      }, [userData]);
+    //END STATE 4
 
-    /*  
-      an array initialised as strings which will be displayed in the Toggle of the last column in each table row
-      when the user selects an item, the row index string in the array will be updated to an object in the form:
-      {
-        item: budgItem.item,
-        cat: itemObj.type,
-        secondaryCat: itemObj.secondary,
-        tertiaryCat: itemObj.tertiary,
-      }
-      The obj.item string will then be displayed in the toggle, whenever the state is updated.
-    */
-    const [selectedItems, setSelectedItems] = useState(userData && userData.length > 0 ? userData.map(() => "Select") : []);
+    //STATE 5- state variable to enable/disable Save Data Button
+      const [isSubmitReady, setIsSubmitReady] = useState(false);
+    //END STATE 5
 
-    // state variable to enable/disable Save Data Button
-    const [isSubmitReady, setIsSubmitReady] = useState(false);
+    //STATE 6- state variable to store the user-entered new budgetItem
+      const [newItem, setNewItem] = useState("");
+    //END STATE 6
 
-    //state variable to store the user-entered new budgetItem
-    const [newItem, setNewItem] = useState("");
+    //STATE 7- state variable which stores the state (open/closed) of the new modal (confirm/cancel add item)
+      const [modal, setModal] = useState(false);
 
-    //state variable which stores the state (open/closed) of the new modal (confirm/cancel add item)
-    const [modal, setModal] = useState(false);
+      //we also need to add an event handler here which reverses the current value of the modal state
+      const modalToggle = () => setModal((prevState) =>(!prevState));
+    //END STATE 7
 
-    //we also need to add an event handler which reverses the current value of the modal state
-    const modalToggle = () => setModal((prevState) =>(!prevState));
-  
+    //STATE 8- state to conditionally render Input form in submenu when user chooses to add a new budget/tax item
+      const [addBItem, setAddBItem] = useState(false);
+      const [addTItem, setAddTItem] = useState(false);
+    //END STATE 8
 
-    //state to conditionally render Input form in submenu when user chooses to add a new budget/tax item
-    const [addBItem, setAddBItem] = useState(false);
-    const [addTItem, setAddTItem] = useState(false);
-
-
-    /*  this is a state object which will be used to store the position to render the submenu when the user clicks a tert link
+    //STATE 9
+      /*  
+        this is a state object which will be used to store the position to render the submenu when the user clicks a tert link
         It also contains properties which will be used to access the user's array of budget items for each 
         tertiary category. 
 
@@ -119,9 +144,26 @@ export default function ImportData() {
           top: null,        // Y-coordinate for submenu positioning
           left: null        // X-coordinate for submenu positioning
         }
-    */ 
-    const [activeSubmenu, setActiveSubmenu] = useState(null);
-  //END DEFINE
+      */ 
+      const [activeSubmenu, setActiveSubmenu] = useState(null);
+
+      /* hook to cache the latest value of the submenu state everytime it changes */
+      useEffect(() => {
+        activeSubmenuRef.current = activeSubmenu;
+
+      }, [activeSubmenu]);
+
+    //END STATE 9
+
+  // END DEFINE STATE/USEEffect
+
+  //START cache variables 
+
+    //reference variable to store the latest value(state) of the submenu (activeSubmenu obj)
+    const activeSubmenuRef = useRef(null);
+
+  //END cache variables
+
 
   //START CONSTANTS 
     // use this map only in the JSX becuase the keys correspond to the budgetItems keys
@@ -191,235 +233,317 @@ export default function ImportData() {
 
   //START EVENT HANDLERS
 
-    /* 
-      areAllCategoriesSelected() assigns a bool value to the disabled attribute of the Save Data button and is therefore called whenever the page reloads due to a state update 
-      (any state including selectedItems). Recall that once the user has uploaded a .csv file, selectedItems[] will become an array of strings (either "Select", or it will be 
-      an object in the following form, after the user has selected a budgetItem category):
+    //HANDLER 0
+      /* 
+        areAllCategoriesSelected() assigns a bool value to the disabled attribute of the Save Data button and is therefore called whenever the page reloads due to a state update 
+        (any state including selectedItems). Recall that once the user has uploaded a .csv file, selectedItems[] will become an array of strings (either "Select", or it will be 
+        an object in the following form, after the user has selected a budgetItem category):
 
-      {
-        "item": "Salary",
-        "amount": 365,
-        "frequency": "annually",
-        "total": 28.08
-      } 
-    */
-    function areAllCategoriesSelected(selectedItems) {
-      if (!Array.isArray(selectedItems) || selectedItems.length === 0) {
-        return false; // function does not run the .every line below until selectedItems has been updated (by useEffect) to an array of "Select" strings the same length as userData
-      }
-      return selectedItems.every(item => typeof item === 'object' && item !== null); // if every returns T, function returns T which should enable button
-    }
-
-    // runs every time user adds a budget item
-    function handleItemAdd(activeObj){
-
-      console.log("✅ User confirmed. Proceeding...");
-
-      //construct the obj to add
-      const newObj = {
-        item: newItem,
-        amount: 0,
-        frequency: "",
-        total: 0
-      };
-
-      //push it onto the correct property of budgetItems
-      // the callback is returning an object which updates the budgetItems state (overwrites it)
-      setBudgetItems((prevState) => ({ // use curly braces
-        ...prevState,   //preserve all the other obj properties
-        [activeObj.type]: { //e.g. Income
-          ...prevState[activeObj.type], 
-          [activeObj.secondary] : {    //e.g. Standard
-            ...prevState[activeObj.type][activeObj.secondary],
-            [activeObj.tertiary] : [
-              ...prevState[activeObj.type][activeObj.secondary][activeObj.tertiary],
-              newObj
-            ]
-          }
+        {
+          "item": "Salary",
+          "amount": 365,
+          "frequency": "annually",
+          "total": 28.08
+        } 
+      */
+      function areAllCategoriesSelected(selectedItems) {
+        if (!Array.isArray(selectedItems) || selectedItems.length === 0) {
+          return false; // function does not run the .every line below until selectedItems has been updated (by useEffect) to an array of "Select" strings the same length as userData
         }
-      }));
-
-    };
-
-    function handleTaxItemAdd(activeObj){
-      console.log("handleTaxItemAdd() function is running!");
-    }
-
-    
-    
-    /* 
-      this function is the handler for the Save Data button at the bottom of page. We need to construct a payload
-      obj which stores the data we need to send to the server route in a POST request which will update the db. Most
-      of the data we need to send to the server is already contained within the userData state array which stores
-      an array of objects (transaction objects) in the following form (after the user has successfully uploaded their .csv file):
-
-      {
-        "id": 2,
-        "header_1": "24/12/2024",
-        "header_2": -65,
-        "header_3": "INDEPAL PTY LTD BRISBANE CITYAU",
-        "header_4": 1149.59
+        return selectedItems.every(item => typeof item === 'object' && item !== null); // if every returns T, function returns T which should enable button
       }
-      We also have the selected year and month stored in selectedYear and selectedMonth state e.g.:
+    //END HANDLER 0
+    
+    //HANDLER 1
+      // runs every time user adds a budget item
+      function handleItemAdd(activeObj){
 
-        selectedYear = 2025;
-        selectedMonth = "January"
+        console.log("✅ User confirmed. Proceeding...");
 
-      And finally, once the user has categorised each transaction, we will have an array of budgetItem objects in the following form,
-      stored in the selectedItems state array (which is conveniently the same length as userData). From the item property, we
-      can extract the budget item id, or send it to the server which can query the db to find it.
-      {
-        "item": "Salary",
-        "amount": 365,
-        "frequency": "annually",
-        "total": 28.08
-      }
-      NB: I need to rename the 'Amount' and 'Total' columns from the Worksheet tables to Planned Amount/Planned 4-Weekly Amount
-      (or Current Amount/Current 4-Weekly Total) to avoid confusion. This would likely also involve some refactoring. 
-
-    */
-    const handleDataSubmit = async (e) => {
-      
-      //define the route url
-      const url = 'http://localhost:3001/import_data/save_budget_data';
-
-      // we need to transform the data stored in userData
-      let userDataCopy = [...userData];
-      let parsedPayload = [];
-      const ONE = 1;
-
-      if(Array.isArray(userDataCopy) && userDataCopy.length > ONE){
-
-        //iterate over parallel arrays and append the budgetItem name to the userData array
-        for(let i=0; i < userDataCopy.length; i++){
-          let budgetItemname = selectedItems[i].item;
-          const updatedObj = {
-            ...userDataCopy[i],
-            itemName: budgetItemname
-          }
-          parsedPayload.push(updatedObj);
+        //construct the obj to add
+        const newObj = {
+          item: newItem,
+          amount: 0,
+          frequency: "",
+          total: 0
         };
 
-      }
+        //push it onto the correct property of budgetItems
+        // the callback is returning an object which updates the budgetItems state (overwrites it)
+        setBudgetItems((prevState) => ({ // use curly braces
+          ...prevState,   //preserve all the other obj properties
+          [activeObj.type]: { //e.g. Income
+            ...prevState[activeObj.type], 
+            [activeObj.secondary] : {    //e.g. Standard
+              ...prevState[activeObj.type][activeObj.secondary],
+              [activeObj.tertiary] : [
+                ...prevState[activeObj.type][activeObj.secondary][activeObj.tertiary],
+                newObj
+              ]
+            }
+          }
+        }));
 
-      //check the parsedPayload array of objects. Each object should be in the following form:
-      /* 
-        {
-          id: 2,
-          header_1: "24/12/2024",
-          header_2: -65,
-          header_3: "INDEPAL PTY LTD BRISBANE CITYAU",
-          header_4: 1149.59,
-          itemName: "Salary"
-        }
-      
-      */
-      
-
-
-      
-
-
-      
-      //prepare the payload obj to be sent to server
-      try{
-        const payload = {
-          userId: userId,
-          month: selectedMonth,
-          year: selectedYear,
-          transactions: parsedPayload
-        }
-
-
-
-
-      }catch(error){
-
-      }
-
-    };
-
-
-    /*  
-      when the user selects an item, we need to update the selectedItems state array at the right index. 
-      itemObj is the activeMenu obj, budgItem is the selected budgetItem in the form of
-      {
-        "item": "Salary",
-        "amount": 365,
-        "frequency": "annually",
-        "total": 28.08
-      }
-    */                        //e.g. {activeSubmenu}, {item: "Salary", amount: 500, frequency: "Weekly", total: 2000}
-    function handleItemSelect(itemObj, budgItem) {
-
-      console.log("handleItemSelect called with:", itemObj, budgItem);//check to see if function is being called
-
-      let dataObj = {
-        item: budgItem.item,
-        cat: itemObj.type,
-        secondaryCat: itemObj.secondary,
-        tertiaryCat: itemObj.tertiary,
       };
-    
-      setSelectedItems((prev) => {
-        const updatedItems = prev.map((item, i) => (i === itemObj.index ? dataObj : item));
-        
-        console.log("Updated selectedItems:", updatedItems);
-        return updatedItems;
-      });
-      //call the areAllCategoriesSelected() to check if all user has made a selection in each table row
+    //END HANDLER 1
 
+    //HANDLER 2
+
+      function handleTaxItemAdd(activeObj){
+        console.log("handleTaxItemAdd() function is running!");
+      }
+    //END HANDLER 2
+
+    //HANDLER 3
+      /* 
+        this function is the handler for the Save Data button at the bottom of page. We need to construct a payload
+        obj which stores the data we need to send to the server route in a POST request which will update the db. Most
+        of the data we need to send to the server is already contained within the userData state array which stores
+        an array of objects (transaction objects) in the following form (after the user has successfully uploaded their .csv file):
+
+        {
+          "id": 2,
+          "header_1": "24/12/2024",
+          "header_2": -65,
+          "header_3": "INDEPAL PTY LTD BRISBANE CITYAU",
+          "header_4": 1149.59
+        }
+        We also have the selected year and month stored in selectedYear and selectedMonth state e.g.:
+
+          selectedYear = 2025;
+          selectedMonth = "January"
+
+        And finally, once the user has categorised each transaction, we will have an array of budgetItem objects in the following form,
+        stored in the selectedItems state array (which is conveniently the same length as userData). From the item property, we
+        can extract the budget item id, or send it to the server which can query the db to find it.
+        {
+          "item": "Salary",
+          "amount": 365,
+          "frequency": "annually",
+          "total": 28.08
+        }
+        NB: I need to rename the 'Amount' and 'Total' columns from the Worksheet tables to Planned Amount/Planned 4-Weekly Amount
+        (or Current Amount/Current 4-Weekly Total) to avoid confusion. This would likely also involve some refactoring. 
+
+      */
+
+
+      //START helper function 1- to reassign the key which stores the date value of payload objects
+        function reAssignDateKey(tObject, payload){
+
+          //SUBHELPER function which will be called from within helper function 1 to identify which object property is a date
+            function isDateString(value, dateFormat) {
+              if (typeof value !== "string") return false;
+
+              let regex, extractor;
+
+              switch (dateFormat) {
+                case "DD/MM/YYYY":
+                  regex = /^([0-2]\d|3[01])\/(0\d|1[0-2])\/\d{4}$/;
+                  extractor = v => {
+                    const [day, month, year] = v.split("/").map(Number);
+                    return { day, month, year };
+                  };
+                  break;
+                case "MM/DD/YYYY":
+                  regex = /^(0\d|1[0-2])\/([0-2]\d|3[01])\/\d{4}$/;
+                  extractor = v => {
+                    const [month, day, year] = v.split("/").map(Number);
+                    return { day, month, year };
+                  };
+                  break;
+                case "YYYY-MM-DD":
+                  regex = /^\d{4}-\d{2}-\d{2}$/;
+                  extractor = v => {
+                    const [year, month, day] = v.split("-").map(Number);
+                    return { day, month, year };
+                  };
+                  break;
+                default:
+                  // fallback, optionally try native Date parse for anything else
+                  return !isNaN(Date.parse(value));
+              }
+
+              if (!regex.test(value)) return false;
+
+              // Optional: ensure the numbers make a valid date
+              const { day, month, year } = extractor(value);
+              const d = new Date(year, month - 1, day);
+              return d.getFullYear() === year &&
+                    d.getMonth() === month - 1 &&
+                    d.getDate() === day;
+            };
+
+          //END SUBHELPER
+
+          //START helper function code block
+
+            let dateKey = "";
+
+            //extract the key-value pairs from object into an array of tuples e.g. [(id,2), (header_1, "24/12/2024"),...]
+            const objPairs = Object.entries(tObject);
+
+            objPairs.forEach(([key, value])=> {
+              const isHeaderDate = isDateString(value, dateFormat);
+              if(isHeaderDate){
+                dateKey = key;
+              }
+            })
+            
+            const newKey = "Date";
+            console.log("Date key:", dateKey);
+            // then at the end (once we have identified all the keys) we can re-assign key names to each object in the array
+            const namedObjArray = payload.map((transObj)=> {
+
+              //callback returns a modified object
+              const { [dateKey]: value, ...rest } = transObj; //select and remove the "header_1" key-value to create a transformed object (transObj)
+              const renamedObject = { ...rest, [newKey]: value}; //create a new object which includes the unchanged key-value pairs (stored in rest), plus a new pair
+
+              return renamedObject;
+            })
+            
+            //return parsed array of trans. objects which now have the "Date" key storing the date values
+            return namedObjArray;
+          //END code block
+
+        };
+      //END helper function 1
+
+      const handleDataSubmit = async (e) => {
+        
+        //define the route url
+        const url = 'http://localhost:3001/import_data/save_budget_data';
+
+        // we need to transform the data stored in userData
+        let userDataCopy = [...userData];
+        let parsedPayload = [];
+        const ONE = 1;
+
+        if(Array.isArray(userDataCopy) && userDataCopy.length > ONE){
+
+          //iterate over parallel arrays and append the budgetItem name to the userData array
+          for(let i=0; i < userDataCopy.length; i++){
+            let budgetItemname = selectedItems[i].item;
+            const updatedObj = {
+              ...userDataCopy[i],
+              itemName: budgetItemname
+            }
+            parsedPayload.push(updatedObj);
+          };
+        }
+
+        //check the parsedPayload array of objects. Each object should be in the following form:
+        /* 
+          {
+            id: 2,
+            header_1: "24/12/2024",
+            header_2: -65,
+            header_3: "INDEPAL PTY LTD BRISBANE CITYAU",
+            header_4: 1149.59,
+            itemName: "Salary"
+          }
+        
+        */
+        
+        //select the first object from the array
+        const firstTransObject = parsedPayload[0];
+
+        //call helper functions to reassign keys to each object in the parsedPayload array (based on their value)
+        
+        //1- re-assign date key (i.e. change the key which holds the date values from "header_x" to "Date")
+        parsedPayload = reAssignDateKey(firstTransObject, parsedPayload);
+        console.log("Parsed payload after reAssignDateKey:",parsedPayload[0]); //test passed
+
+        //2- re-assign description key
+
+        //3- re-assign amount key
+
+        //4- re-assign balance key
+
+        
+
+        
+        
+          
+
+        
+
+        
+        /* //prepare the payload obj to be sent to server
+        try{
+          const payload = {
+            userId: userId,
+            month: selectedMonth,
+            year: selectedYear,
+            transactions: parsedPayload
+          }
+
+        }catch(error){
+
+        } */
+
+      };
+
+    //END HANDLER 3
+
+    //HANDLER 4
+      /*  
+        when the user selects an item, we need to update the selectedItems state array at the right index. 
+        itemObj is the activeMenu obj, budgItem is the selected budgetItem in the form of
+        {
+          "item": "Salary",
+          "amount": 365,
+          "frequency": "annually",
+          "total": 28.08
+        }
+      */                        //e.g. {activeSubmenu}, {item: "Salary", amount: 500, frequency: "Weekly", total: 2000}
+      function handleItemSelect(itemObj, budgItem) {
+
+        console.log("handleItemSelect called with:", itemObj, budgItem);//check to see if function is being called
+
+        let dataObj = {
+          item: budgItem.item,
+          cat: itemObj.type,
+          secondaryCat: itemObj.secondary,
+          tertiaryCat: itemObj.tertiary,
+        };
       
-    };
+        setSelectedItems((prev) => {
+          const updatedItems = prev.map((item, i) => (i === itemObj.index ? dataObj : item));
+          
+          console.log("Updated selectedItems:", updatedItems);
+          return updatedItems;
+        });
+        //call the areAllCategoriesSelected() to check if all user has made a selection in each table row
 
-    //event handler for the tertiary category links in the custom dropdown
-    /* 
-      NB: This function works (when the previous iteration didn't) because We only update the state once, depending on 
-      whether the same submenu is already open. Before, we were calling setActiveSubmenu() twice in quick succession 
-      (once to close, once to reopen), which caused React to batch the updates — sometimes re-opening the 
-      submenu immediately
-    */
-    function initialiseSubmenu(pCat, sCat, tCat, rowIndex, event) {
-      const rect = event.currentTarget.getBoundingClientRect();
-
-      //access the latest version of the submenu state
-      const latestVal = activeSubmenuRef.current;
-
-      const modScat = objMap[pCat][sCat].Prop;
-      const modTcat = objMap[pCat][sCat][tCat];
-
-      // Generate a unique ID for this submenu
-      const subId = `${pCat}-${sCat}-${tCat}-${rowIndex}`;
-
-      if(!latestVal){
-        //if true it means that no submenu is currently open because activeSubmenu === null
-        //in which case we need to open the right one using the parameters
-
-        //slightly delay the initialisation 
-        setTimeout(() => {
-          setActiveSubmenu({
-            id: subId,
-            type: pCat,
-            secondary: modScat,
-            tertiary: modTcat,
-            top: rect.top + window.scrollY,
-            left: rect.right + window.scrollX,
-            index: rowIndex,
-          });
-        }, 0)
-
-        return;
         
-      } else{
-        //  if true it means that a submenu is open at the time of the user click
-        // in which case we need to check if the user has re-clicked the same item
-        // in which case it needs to be closed
-        // If this exact submenu is already open, close it
-        if (activeSubmenuRef.current?.id === subId) {
-          setActiveSubmenu(null);
-          return;
+      };
+    //END HANDLER 4
 
-        } else{
+    //HANDLER 5-event handler for the tertiary category links in the custom dropdown
+      /* 
+        NB: This function works (when the previous iteration didn't) because We only update the state once, depending on 
+        whether the same submenu is already open. Before, we were calling setActiveSubmenu() twice in quick succession 
+        (once to close, once to reopen), which caused React to batch the updates — sometimes re-opening the 
+        submenu immediately
+      */
+      function initialiseSubmenu(pCat, sCat, tCat, rowIndex, event) {
+        const rect = event.currentTarget.getBoundingClientRect();
+
+        //access the latest version of the submenu state
+        const latestVal = activeSubmenuRef.current;
+
+        const modScat = objMap[pCat][sCat].Prop;
+        const modTcat = objMap[pCat][sCat][tCat];
+
+        // Generate a unique ID for this submenu
+        const subId = `${pCat}-${sCat}-${tCat}-${rowIndex}`;
+
+        if(!latestVal){
+          //if true it means that no submenu is currently open because activeSubmenu === null
+          //in which case we need to open the right one using the parameters
+
+          //slightly delay the initialisation 
           setTimeout(() => {
             setActiveSubmenu({
               id: subId,
@@ -432,36 +556,39 @@ export default function ImportData() {
             });
           }, 0)
 
-        }
+          return;
+          
+        } else{
+          //  if true it means that a submenu is open at the time of the user click
+          // in which case we need to check if the user has re-clicked the same item
+          // in which case it needs to be closed
+          // If this exact submenu is already open, close it
+          if (activeSubmenuRef.current?.id === subId) {
+            setActiveSubmenu(null);
+            return;
 
+          } else{
+            setTimeout(() => {
+              setActiveSubmenu({
+                id: subId,
+                type: pCat,
+                secondary: modScat,
+                tertiary: modTcat,
+                top: rect.top + window.scrollY,
+                left: rect.right + window.scrollX,
+                index: rowIndex,
+              });
+            }, 0)
+
+          }
+
+        }
       }
-    }
+    //END HANDLER 5
   
   //END EVENT handlers
 
-  //START useEffect Hooks
-
-    // useEffect to update the selectedItems array when userData changes
-    useEffect(() => {
-      if (Array.isArray(userData) && userData.length > 0) {
-        setSelectedItems(userData.map(() => "Select Item"));
-      }
-    }, [userData]);
-
-    //retrieve budgetItems immediately after the component renders (as soon as it is updated in AuthProvider)
-    useEffect(() => {
-      if (!budgetItems || Object.keys(budgetItems).length === 0) return; // ✅ Prevents running when budgetItems is empty
-      console.log("Budget Items Object:", budgetItems);
-    
-    }, [budgetItems]);
-
-    /* hook to cache the latest value of the submenu state everytime it changes */
-    useEffect(() => {
-      activeSubmenuRef.current = activeSubmenu;
-
-    }, [activeSubmenu]);
-    
-  //END hooks
+  
 
   //START HELPER functions which are called from the main JSX return statement, to render some JSX within the main JSX
 
