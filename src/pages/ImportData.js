@@ -155,6 +155,11 @@ export default function ImportData() {
 
     //END STATE 9
 
+    //START STATE 10-a STATE object to render a different page when user submits data, and a state to store the JSON response
+      const[isDataSubmitted, setIsDataSubmitted] = useState(false);
+      const [serverResponse, setServerResponse] = useState(null);
+    //END STATE 10
+
   // END DEFINE STATE/USEEffect
 
   //START cache variables 
@@ -409,6 +414,177 @@ export default function ImportData() {
         };
       //END helper function 1
 
+      //START helper function 2
+        function reAssignDescriptionKey(tObject, payload) {
+
+          const DESC = "Description";
+          const EXCLUDE_KEYS = ["Date", "id", "itemName"];
+
+          //extract the keys to check into an array
+          const keysToCheck = Object.keys(tObject).filter(key => !EXCLUDE_KEYS.includes(key));
+          const FIVE = 5;
+
+          // Initialise all candidate keys to score 0
+          let scoreTallyObj = {};
+          for (const key of keysToCheck) {
+            scoreTallyObj[key] = 0;
+          }
+          
+          // Check the first 5 objects in payload
+          for (const dataObj of payload.slice(0, FIVE)) {
+            for (const key of keysToCheck) {
+              const value = dataObj[key];
+              let score = 0;
+              if (typeof value === "string") {
+                if (value.length > 10) score += 1;
+                if (/\s/.test(value)) score += 1;
+                if (/(PTY|LTD|INC|BANK|PAYMENT|TRANSFER|DEPOSIT)/i.test(value)) score += 2;
+              }
+              scoreTallyObj[key] += score;
+            }
+          }
+
+          // Get the key with highest score
+          let descKey = "";
+          let highestValue = -Infinity;
+          for (const [key, value] of Object.entries(scoreTallyObj)) {
+            if (value >= highestValue) {
+              descKey = key;
+              highestValue = value;
+            }
+          }
+
+          // Transform objects in the payload
+          const namedObjArray = payload.map(obj => {
+            const { [descKey]: value, ...rest} = obj;
+            return { [DESC]: value, ...rest };
+          });
+
+          return namedObjArray;
+        }
+
+      //END helper function 2
+
+      //START helper function 3-function to reassign the remaining keys (i.e. Amount, Balance)
+        function reAssignBalKeys(tObject, payload){
+          const BALANCE = "Balance"
+          const EXCLUDE_KEYS = ["Date", "id", "itemName","Description"];
+          const keysToCheck = Object.keys(tObject).filter(key => !EXCLUDE_KEYS.includes(key));
+          const TEN = 10;
+
+          let scoreTallyObj = {};
+          for (const key of keysToCheck) {
+            scoreTallyObj[key] = 0;
+          }
+          
+          // Check the first 10 objects in payload against typical transaction balance column values
+          for (const dataObj of payload.slice(0, TEN)) {
+            // Find max-valued numeric candidate for this row
+            let maxNum = -Infinity, maxKey = null;
+            for (const key of keysToCheck) {
+              const value = dataObj[key];
+              let score = 0;
+              // Must be finite number and not null
+              if (typeof value === "number" && Number.isFinite(value)) {
+                score += 1; // baseline for being a number
+                // Typical balances are generally positive and above small threshold
+                if (value > 10) score += 1;
+                // If value is greatest numeric for this row, extra point
+                if (Math.abs(value) > Math.abs(maxNum)) {
+                  maxNum = value;
+                  maxKey = key;
+                }
+              }
+              scoreTallyObj[key] += score;
+            }
+            // Give a bonus to the biggest numeric candidate
+            if (maxKey) scoreTallyObj[maxKey] += 2;
+          }
+
+          // Get the key with highest score
+          let balKey = "";
+          let highestValue = -Infinity;
+          for (const [key, value] of Object.entries(scoreTallyObj)) {
+            if (value >= highestValue) {
+              balKey = key;
+              highestValue = value;
+            }
+          }
+
+          // Transform objects in the payload
+          const namedObjArray = payload.map(obj => {
+            const { [balKey]: value, ...rest} = obj;
+            return { [BALANCE]: value, ...rest };
+          });
+
+          return namedObjArray;
+        }
+
+      //END helper function 3
+
+      //START helper function 4
+        function reAssignAmtKeys(tObject, payload){
+          const AMOUNT = "Amount";
+          const EXCLUDE_KEYS = ["Date", "id", "itemName", "Description", "Balance"];
+          const keysToCheck = Object.keys(tObject).filter(key => !EXCLUDE_KEYS.includes(key));
+          const TEN = 10;
+
+          let scoreTallyObj = {};
+          for (const key of keysToCheck) {
+            scoreTallyObj[key] = 0;
+          }
+
+          // Check the first 10 objects in payload against typical transaction amount values
+          for (const dataObj of payload.slice(0, TEN)) {
+            for (const key of keysToCheck) {
+              const value = dataObj[key];
+              let score = 0;
+              // Must be finite number and not null
+              if (typeof value === "number" && Number.isFinite(value)) {
+                score += 1; // baseline for being a number
+                // Amounts often include negative numbers (expenditure)
+                if (value < 0) score += 2;
+                // Amounts are usually not extremely high (relative to balances)
+                if (Math.abs(value) < 5000) score += 1;
+                // Amounts are rarely zero, but balance can be
+                if (value !== 0) score += 1;
+                // If the same key has both negative and positive values across sample set, add bonus at end
+                if (!scoreTallyObj[`${key}_signs`]) scoreTallyObj[`${key}_signs`] = new Set();
+                scoreTallyObj[`${key}_signs`].add(Math.sign(value));
+              }
+              scoreTallyObj[key] += score;
+            }
+          }
+
+          // Give a bonus if key had both negative and positive values in sample set
+          for (const key of keysToCheck) {
+            const signs = scoreTallyObj[`${key}_signs`];
+            if (signs && signs.has(-1) && signs.has(1)) {
+              scoreTallyObj[key] += 3; // bonus for being both expense and income
+            }
+            delete scoreTallyObj[`${key}_signs`];
+          }
+
+          // Get the key with highest score
+          let amtKey = "";
+          let highestValue = -Infinity;
+          for (const [key, value] of Object.entries(scoreTallyObj)) {
+            if (value >= highestValue) {
+              amtKey = key;
+              highestValue = value;
+            }
+          }
+
+          // Transform objects in the payload
+          const namedObjArray = payload.map(obj => {
+            const { [amtKey]: value, ...rest} = obj;
+            return { [AMOUNT]: value, ...rest };
+          });
+
+          return namedObjArray;
+        }
+      //END helper function 4
+
       const handleDataSubmit = async (e) => {
         
         //define the route url
@@ -455,32 +631,49 @@ export default function ImportData() {
         console.log("Parsed payload after reAssignDateKey:",parsedPayload[0]); //test passed
 
         //2- re-assign description key
+        parsedPayload = reAssignDescriptionKey(firstTransObject, parsedPayload);
+        console.log("Parsed payload after reAssignDescriptionKey:",parsedPayload[0]); //test passed
 
-        //3- re-assign amount key
+        //3- re-assign balance key
+        parsedPayload = reAssignBalKeys(firstTransObject, parsedPayload);
+        console.log("Parsed payload after reAssignBalKeys:",parsedPayload[0]); //test 
 
-        //4- re-assign balance key
+        //4- re-assign amount key
+        parsedPayload = reAssignAmtKeys(firstTransObject, parsedPayload);
+        console.log("Parsed payload after reAssignAmtKeys:",parsedPayload[0]); //test 
 
-        
-
-        
-        
-          
-
-        
-
-        
-        /* //prepare the payload obj to be sent to server
+        //prepare the payload obj to be sent to server
         try{
           const payload = {
             userId: userId,
             month: selectedMonth,
             year: selectedYear,
             transactions: parsedPayload
+            //if there are any additional transaction columns, leave them unchanged in the parsedPayload
+          };
+          // Perform the POST request
+          const response = await fetch(url, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json', // Set the content type to JSON
+              },
+              body: JSON.stringify(payload), // Convert the payload to JSON string
+          });
+
+          // Handle the server response
+          if (response.ok) {
+            const result = await response.json();
+            console.log('Data saved successfully:', result);
+            setIsDataSubmitted(true); //setting this to true will conditionally render another component(JSX) on the page instead of transactions table
+            setServerResponse(result);
+            
+          } else {
+            console.error('Server responded with an error:', response.status);
           }
 
         }catch(error){
-
-        } */
+          console.error('Fetch error:', error);
+        }
 
       };
 
