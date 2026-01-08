@@ -160,6 +160,11 @@ export default function ImportData() {
       const [serverResponse, setServerResponse] = useState(null);
     //END STATE 10
 
+    //START STATE 11-state array to add new budget items to whenever the user adds a new budget item
+    const[newBudgetItems, setNewBudgetItems] = useState([]);
+
+    //END STATE 11
+
   // END DEFINE STATE/USEEffect
 
   //START cache variables 
@@ -648,7 +653,9 @@ export default function ImportData() {
             userId: userId,
             month: selectedMonth,
             year: selectedYear,
-            transactions: parsedPayload
+            transactions: parsedPayload,
+            newItems: newBudgetItems
+
             //if there are any additional transaction columns, leave them unchanged in the parsedPayload
           };
           // Perform the POST request
@@ -948,6 +955,7 @@ export default function ImportData() {
             
                 if(addBItem && cachedSubmenu){
                     handleItemAdd(cachedSubmenu);  // ✅ safely add the budget item
+                    setNewBudgetItems(prevState=> [...prevState, { item:newItem, amount: 0, frequency: "", total: 0 }]); //add the new budget item to state
                     setNewItem("");                // ✅ reset input
                 }else{
                     handleTaxItemAdd(cachedSubmenu); //safely add the new tax item
@@ -1040,6 +1048,7 @@ export default function ImportData() {
 
                     // update state to true to indicate the user selected to add "budget" item
                     setAddBItem(true);
+                    
                   }}
                 >
                   Add New Budget Item
