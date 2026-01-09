@@ -680,6 +680,9 @@ export default function ImportData() {
 
         }catch(error){
           console.error('Fetch error:', error);
+        }finally{
+          //reset the newBudgetItems state
+          setNewBudgetItems([]);
         }
 
       };
