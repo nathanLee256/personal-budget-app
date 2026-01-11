@@ -958,7 +958,18 @@ export default function ImportData() {
             
                 if(addBItem && cachedSubmenu){
                     handleItemAdd(cachedSubmenu);  // ✅ safely add the budget item
-                    setNewBudgetItems(prevState=> [...prevState, { item:newItem, amount: 0, frequency: "", total: 0 }]); //add the new budget item to state
+
+                    //add the new budget item to state
+                    setNewBudgetItems(prevState=> [...prevState, { 
+                      item:newItem, 
+                      amount: 0, 
+                      frequency: "", 
+                      total: 0,
+                      primaryCat: cachedSubmenu.type,
+                      secondaryCat: cachedSubmenu.secondary,
+                      tertiaryCat: cachedSubmenu.tertiary 
+                    }]); 
+
                     setNewItem("");                // ✅ reset input
                 }else{
                     handleTaxItemAdd(cachedSubmenu); //safely add the new tax item
