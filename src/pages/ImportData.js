@@ -1299,7 +1299,7 @@ const StyledContainer = styled.div`
   padding-left: 15px;
   padding-right: 15px;
   background-color: #fff;
-  min-height: 100vh;
+  min-height: 150vh;
 
   @media (min-width: 768px) {
     max-width: 720px;
