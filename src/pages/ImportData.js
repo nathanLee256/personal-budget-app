@@ -591,7 +591,19 @@ export default function ImportData() {
       //END helper function 4
 
       const handleDataSubmit = async (e) => {
+
+        /* 
+          the first thing we need to do here is to check if the user has already submitted any transactions for the current 
+          selectedMonth/selectedYear. To do this we'll have to add a quick fetch to a different server route, which will check if there 
+          is currently any data in user_transactions table for that month/year. The server route will simply return true or false to 
+          indicate whether there is/isn't data. If there is data that the user has previously submitted for that year/month, we need to 
+          present them with a choice: overwrite (delete old, insert new) previous data, or add to previous data. I will need to add this 
+          feature for testing, so that as I test the server route (and insert data rows), that I can delete the test data from the table.
+        */
         
+
+
+
         //define the route url
         const url = 'http://localhost:3001/import_data/save_budget_data';
 
@@ -621,7 +633,7 @@ export default function ImportData() {
             header_2: -65,
             header_3: "INDEPAL PTY LTD BRISBANE CITYAU",
             header_4: 1149.59,
-            itemName: "Salary"
+            itemName: "Christmas Gifts"
           }
         
         */
@@ -653,11 +665,13 @@ export default function ImportData() {
             userId: userId,
             month: selectedMonth,
             year: selectedYear,
-            transactions: parsedPayload,
-            newItems: newBudgetItems
+            transactions: parsedPayload,  // [{ id: 2, Date: "24/12/2024", Amount: -65, Description: "INDEPAL...", Balance: 1149.59, itemName: "Christmas Gifts" },...]
+            newItems: newBudgetItems      // [{ item: "Christmas Gifts", amount: 0, frequency: "", total: 0, primaryCat: "Expenditure", secondaryCat: "Giving", tertiaryCat: "Giving"}, ...]
 
             //if there are any additional transaction columns, leave them unchanged in the parsedPayload
           };
+
+
           // Perform the POST request
           const response = await fetch(url, {
               method: 'POST',
