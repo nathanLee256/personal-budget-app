@@ -55,8 +55,8 @@ export default function ImportData() {
       useEffect(() => {
 
         //-1
-        const year = new Date().getFullYear();
-        let lastFiveYears = [];
+        const year = new Date().getFullYear();  //Date().getFullYear(); returns a number not a string. Thus the array will contain ints 
+        let lastFiveYears = [];                 // and selectedYear will be an int
         for (let x = 0; x < 5; x++) {
           lastFiveYears.push(year - x);
         }
@@ -67,7 +67,7 @@ export default function ImportData() {
 
     //STATE 2-three state variables which will be passed as props to <SelectFile/>. Stores the month/year/file user selects in <SelectFile/>
       const [selectedMonth, setSelectedMonth] = useState("");
-      const [selectedYear, setSelectedYear] = useState("");
+      const [selectedYear, setSelectedYear] = useState(null);  //will be assigned an int
       const [file, setFile] = useState(null);
     //END STATE 2
 
@@ -164,6 +164,17 @@ export default function ImportData() {
     const[newBudgetItems, setNewBudgetItems] = useState([]);
 
     //END STATE 11
+
+    //STATE 12 - 2 bool state variables to store whether the user has previously submitted data for selected year/month (newSubmission), 
+    // and if they have they are then prompted (using a modal) as to whether they want to overwrite or delete previous data.
+      const [overWriteData, setOverWriteData] = useState(false);
+
+      //bool state variable which represents whether the modal isOpen
+      const [saveDataModal, setSaveDataModal] = useState(false);
+
+      // toggle function which is called to open/close modal
+      const saveDataToggle = () => setSaveDataModal(!saveDataModal);
+    //END STATE 12
 
   // END DEFINE STATE/USEEffect
 
@@ -306,7 +317,7 @@ export default function ImportData() {
 
     //HANDLER 3
       /* 
-        this function is the handler for the Save Data button at the bottom of page. We need to construct a payload
+        this function is the handler for the button at the bottom of page. We need to construct a payload
         obj which stores the data we need to send to the server route in a POST request which will update the db. Most
         of the data we need to send to the server is already contained within the userData state array which stores
         an array of objects (transaction objects) in the following form (after the user has successfully uploaded their .csv file):
@@ -802,6 +813,62 @@ export default function ImportData() {
         }
       }
     //END HANDLER 5
+
+    //START HANDLER 6
+    const preSubmitCheck = async (e) => {
+      /* 
+        This code runs when the 'Save Budget Data' Button is clicked on the ImportData page. When user clicks the button, 
+        the preSubmit() function runs. The first thing it does is send a fetch request to the import_data/check_month_year route, 
+        passing it the values stored in selectedMonth, and selectedYear. Once the function receives a successful response from 
+        the server (with a bool value stored in the payload), if the bool is false then it prompts the user (perhaps in a modal) 
+        to specify whether they want to overwrite their existing data, (delete it and insert new data), or whether they want to 
+        add to it. If they want to overwrite data, we update overWriteData to true.
+      */
+
+      //define the route url
+      const url = 'http://localhost:3001/import_data/check_for_prev_entries';
+
+      //construct the payload
+      const payload = {
+        userId: userId,
+        month: selectedMonth,
+        year: selectedYear
+      };
+
+      try{
+        // Perform the POST request
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json', // Set the content type to JSON
+            },
+            body: JSON.stringify(payload), // Convert the payload to JSON string
+        });
+
+        // Handle the server response
+        if (response.ok) {
+          const result = await response.json();
+          console.log('Prev submission check executed successfully:', result);
+
+          //destructure the result obj
+          const { newSubmission } = result; //server will return true or false
+          if(newSubmission){
+            //open modal
+            setSaveDataModal(true);
+          }
+          
+        } else {
+          console.error('Server responded with an error:', response.status);
+        }
+
+      }catch(error){
+        console.error('Error occurred in check_for_prev_entries POST request:', error);
+      }
+
+    }
+
+
+    //END HANDLER 6
   
   //END EVENT handlers
 
@@ -1034,7 +1101,7 @@ export default function ImportData() {
               color="primary"
               size="lg"
               disabled={!areAllCategoriesSelected(selectedItems)}
-              onClick={handleDataSubmit}
+              onClick={preSubmitCheck}
             >
               Save Budget Data
             </Button>
