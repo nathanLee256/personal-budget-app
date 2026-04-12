@@ -156,7 +156,7 @@ export default function ImportData() {
     //END STATE 9
 
     //START STATE 10-a STATE object to render a different page when user submits data, and a state to store the JSON response
-      const[isDataSubmitted, setIsDataSubmitted] = useState(false);
+      const [isDataSubmitted, setIsDataSubmitted] = useState(false);
       const [serverResponse, setServerResponse] = useState(null);
     //END STATE 10
 
@@ -167,13 +167,13 @@ export default function ImportData() {
 
     //STATE 12 - 2 bool state variables to store whether the user has previously submitted data for selected year/month (newSubmission), 
     // and if they have they are then prompted (using a modal) as to whether they want to overwrite or delete previous data.
-      const [overWriteData, setOverWriteData] = useState(false);
 
-      //bool state variable which represents whether the modal isOpen
-      const [saveDataModal, setSaveDataModal] = useState(false);
+      const[saveModalState, setSaveModalState] = useState({
+        responseErr : false,  // if T, opens a custom error modal in the event that !response.ok ('Try Again'/'Cancel')
+        newSubmit : true,     // this valus is used to open either a confirm modal ('Confirm'/'Cancel') or a ('Delete'/'Overwrite') modal 
+        openModal: false,     // this value controls whether the modal is open or closed  
+      });
 
-      // toggle function which is called to open/close modal
-      const saveDataToggle = () => setSaveDataModal(!saveDataModal);
     //END STATE 12
 
   // END DEFINE STATE/USEEffect
@@ -852,7 +852,7 @@ export default function ImportData() {
 
           //destructure the result obj
           const { newSubmission } = result; //server will return true or false
-          if(newSubmission){
+          if(!newSubmission){
             //open modal
             setSaveDataModal(true);
           }
