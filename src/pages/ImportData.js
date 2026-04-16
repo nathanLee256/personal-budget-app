@@ -169,7 +169,7 @@ export default function ImportData() {
     // and if they have they are then prompted (using a modal) as to whether they want to overwrite or delete previous data.
 
       const[saveModalState, setSaveModalState] = useState({
-        responseErr : false,  // if T, opens a custom error modal in the event that !response.ok ('Try Again'/'Cancel')
+        responseErr : "",  // if truthy, opens a custom error modal in the event that !response.ok ('Try Again'/'Cancel')
         newSubmit : true,     // this valus is used to open either a confirm modal ('Confirm'/'Cancel') or a ('Delete'/'Overwrite') modal 
         openModal: false,     // this value controls whether the modal is open or closed  
       });
@@ -853,16 +853,39 @@ export default function ImportData() {
           //destructure the result obj
           const { newSubmission } = result; //server will return true or false
           if(!newSubmission){
-            //open modal
-            setSaveDataModal(true);
+            //if the cond is T it means the HHTP req was fine but the user previously entered data. We need to open 'delete/overwrite' modal
+            setSaveModalState((prevState) => ({
+              ...prevState,
+              newSubmit : false,
+              openModal: true,
+            }));
+          }else{
+            //this will run if the request was fine and the user is entering new data. We need to open the 'Confirm/Cancel' modal.
+            setSaveModalState((prevState) => ({
+              ...prevState,
+              openModal: true
+            }));
           }
           
         } else {
+          //this runs if the server responded with an error in which case we need to open the 'Try Again/Cancel' modal and log err details
           console.error('Server responded with an error:', response.status);
+          setSaveModalState((prevState) => ({
+            ...prevState,
+            responseErr: "Server responded with an error.",
+            openModal: true
+          }));
         }
 
       }catch(error){
+        //this runs if the server responded with an error in which case we need to open the 'Try Again/Cancel' modal and log err details
         console.error('Error occurred in check_for_prev_entries POST request:', error);
+        setSaveModalState((prevState) => ({
+          ...prevState,
+          responseErr: error.message,
+          openModal: true
+        }));
+        
       }
 
     }
