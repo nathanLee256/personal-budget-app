@@ -32,7 +32,9 @@ export default function SelectFile({
         
 
         const handleYearChange = (e) => {
-            setSelectedYear(e.target.value);
+            // Parse the string "2024" into the integer 2024
+            const yearInt = e.target.value === "" ? "" : parseInt(e.target.value, 10);
+            setSelectedYear(yearInt);
             setSelectedMonth("");
         };
 
