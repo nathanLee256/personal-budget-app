@@ -8,6 +8,7 @@ import PortalSubmenu from '../components/PortalSubmenu.js';
 import SelectFile from '../components/SelectFile.js';
 import AddItemForm from '../components/AddItemForm.js';
 import CustomDropdown from '../components/CustomDropdown.js';
+import SaveModal from '../modals/ImportData_Save_Data.js';
 
 
 /*  
@@ -67,7 +68,7 @@ export default function ImportData() {
 
     //STATE 2-three state variables which will be passed as props to <SelectFile/>. Stores the month/year/file user selects in <SelectFile/>
       const [selectedMonth, setSelectedMonth] = useState("");
-      const [selectedYear, setSelectedYear] = useState(null);  //will be assigned an int
+      const [selectedYear, setSelectedYear] = useState("");  //will be assigned an int
       const [file, setFile] = useState(null);
     //END STATE 2
 
@@ -173,6 +174,12 @@ export default function ImportData() {
         newSubmit : true,     // this valus is used to open either a confirm modal ('Confirm'/'Cancel') or a ('Delete'/'Overwrite') modal 
         openModal: false,     // this value controls whether the modal is open or closed  
       });
+
+      // toggle function which is called to open/close modal
+      const saveDataToggle = () => setSaveModalState((prevState) => ({
+          ...prevState, //preserve the other object properties
+          openModal : !prevState.openModal // reverse the openModal bool to open/close modal
+      }));
 
     //END STATE 12
 
@@ -994,7 +1001,7 @@ export default function ImportData() {
           budgetItems.Income[activeSubmenu.secondary][activeSubmenu.tertiary].map((item, index) => { 
             console.log("Rendering DropdownItem for:", item);
             return(
-              <StyledRows index={index}> 
+              <StyledRows key={index} index={index}> 
                 <StyledSubDDItem
                   key={index} 
                   onClick={() => handleItemSelect(activeSubmenu, item)} // ✅ Pass the actual item
@@ -1010,7 +1017,7 @@ export default function ImportData() {
           budgetItems.Expenditure[activeSubmenu.secondary][activeSubmenu.tertiary].map((item, index) => { 
             console.log("Rendering DropdownItem for:", item);
             return(
-              <StyledRows index={index}> 
+              <StyledRows key={index} index={index}> 
                 <StyledSubDDItem 
                   key={index} 
                   onClick={() => handleItemSelect(activeSubmenu, item)} // ✅ Pass the actual item
@@ -1208,6 +1215,12 @@ export default function ImportData() {
         )}
         {/* Modal content is placed here (using a helper function), outside of conditional rendering */}
         {renderModal()}
+        {/* call the SaveModal component */}
+        <SaveModal
+          saveModalState={saveModalState}
+          setSaveModalState={setSaveModalState}
+          saveDataToggle={saveDataToggle}
+        />
         
       </SubWrapper>
     );
