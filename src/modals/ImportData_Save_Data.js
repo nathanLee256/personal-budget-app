@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Modal, ModalBody, ModalHeader,ModalFooter, UncontrolledCollapse} from 'reactstrap';
+import { Button, Modal, ModalBody, ModalHeader,ModalFooter} from 'reactstrap';
 
 /* 
     The state object defined in the parent (ImportData) and passed into this component contains the following properties:
@@ -15,7 +15,9 @@ import { Button, Modal, ModalBody, ModalHeader,ModalFooter, UncontrolledCollapse
 
 
 export default function SaveModal({
-    saveModalState, setSaveModalState
+    saveModalState, 
+    setSaveModalState,
+    saveDataToggle
 }){
 
     //local state variable which will store the modal body string
@@ -37,11 +39,7 @@ export default function SaveModal({
     const OVERWRITE = "Overwrite";
     const ADD_TO = "Add to";
 
-    // toggle function which is called to open/close modal
-    const saveDataToggle = () => setSaveModalState((prevState) => ({
-        ...prevState, //preserve the other object properties
-        openModal : !prevState.openModal // reverse the openModal bool to open/close modal
-    }));
+    
 
     //component useEffect hook function with cleanup
     //function will run everytime the SaveModal component is called to be rendered, and also whenever saveModalState object changes
@@ -65,9 +63,7 @@ export default function SaveModal({
                 setSuccessButton(ADD_TO);
                 setDangerButton(OVERWRITE);
             }
-
         }
-        
     }, [saveModalState]);
 
 
@@ -80,7 +76,7 @@ export default function SaveModal({
     return(
         <div> 
           <Modal isOpen={saveModalState.openModal} toggle={saveDataToggle}>
-            <ModalHeader toggle={saveDataToggle}>{header}</ModalHeader>
+            <ModalHeader saveDataToggle={saveDataToggle}>{header}</ModalHeader>
                 <ModalBody>
                     {body}
                     <br />
@@ -106,6 +102,9 @@ export default function SaveModal({
                 //stop the dropdown and submenu from closing
                 e.preventDefault(); 
                 e.stopPropagation(); 
+
+                //close modal
+                saveDataToggle();
 
                 // reset state
                 
