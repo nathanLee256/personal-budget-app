@@ -25,6 +25,7 @@ export default function SaveModal({
     const [body, setBody] = useState("");
     const [successButton, setSuccessButton] = useState("");
     const [dangerButton, setDangerButton] = useState("");
+    const [useCase, setUseCase] = useState(0);
 
     const ERROR_HEADER = "ERROR";
     const REGULAR_HEADER = "Confirm Action";
@@ -50,6 +51,7 @@ export default function SaveModal({
             setBody(ERROR_BODY);
             setSuccessButton(ERR_SUCCESS);
             setDangerButton(CANCEL);
+            setUseCase(3);
 
         } else{
             if(saveModalState.newSubmit){
@@ -57,14 +59,36 @@ export default function SaveModal({
                 setBody(CONFIRM_BODY);
                 setSuccessButton(CONFIRM);
                 setDangerButton(CANCEL);
+                setUseCase(1);
             } else{
                 setHeader(REGULAR_HEADER);
                 setBody(DEL_OVERWRITE_BODY);
                 setSuccessButton(ADD_TO);
                 setDangerButton(OVERWRITE);
+                setUseCase(2);
             }
         }
     }, [saveModalState]);
+
+    function handleSuccess(caseId){
+        switch(caseId) {
+            case 1: //"Confirm" button
+            // here we need to perform the POST request, sedning the server the (new) transactions
+            //insert logic
+            break;
+            case 2: // "Append" button
+            // here we need to perform the POST request, sending the server the additional trans (and an instruction to append)
+            //insert logic
+            break;
+            case 3: // "Try Again"
+            //here we need to call the preSubmitCheck function again, effectively creating a while loop
+            preSubmitCheck();
+            break;
+        }
+        // Close the modal after the action is triggered
+        //setSaveModalState(prev => ({ ...prev, openModal: false }));
+
+    }
 
 
 
@@ -87,13 +111,7 @@ export default function SaveModal({
                     }
                 </ModalBody>
             <ModalFooter>
-              <Button color="success" onClick={(e) => {
-
-                //stop the dropdown and submenu from closing
-                e.preventDefault(); 
-                e.stopPropagation(); 
-
-                }}
+              <Button color="success" onClick={handleSuccess(useCase)}
               >
                 {successButton}
               </Button>
