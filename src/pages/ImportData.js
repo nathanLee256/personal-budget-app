@@ -870,6 +870,7 @@ export default function ImportData() {
             //this will run if the request was fine and the user is entering new data. We need to open the 'Confirm/Cancel' modal.
             setSaveModalState((prevState) => ({
               ...prevState,
+              newSubmit: true, // explicitly reset newSubmit to account for the sit. where user closes modal and chooses a new month
               openModal: true
             }));
           }
