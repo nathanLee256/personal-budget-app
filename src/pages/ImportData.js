@@ -608,7 +608,7 @@ export default function ImportData() {
         }
       //END helper function 4
 
-      const handleDataSubmit = async (e) => {
+      async function handleDataSubmit(instruction){
 
         /* 
           the first thing we need to do here is to check if the user has already submitted any transactions for the current 
@@ -618,10 +618,13 @@ export default function ImportData() {
           present them with a choice: overwrite (delete old, insert new) previous data, or add to previous data. I will need to add this 
           feature for testing, so that as I test the server route (and insert data rows), that I can delete the test data from the table.
         */
+
+        const initialState = {
+            responseErr : "",  
+            newSubmit : true,     
+            openModal: false,
+        };
         
-
-
-
         //define the route url
         const url = 'http://localhost:3001/import_data/save_budget_data';
 
@@ -684,8 +687,8 @@ export default function ImportData() {
             month: selectedMonth,
             year: selectedYear,
             transactions: parsedPayload,  // [{ id: 2, Date: "24/12/2024", Amount: -65, Description: "INDEPAL...", Balance: 1149.59, itemName: "Christmas Gifts" },...]
-            newItems: newBudgetItems      // [{ item: "Christmas Gifts", amount: 0, frequency: "", total: 0, primaryCat: "Expenditure", secondaryCat: "Giving", tertiaryCat: "Giving"}, ...]
-
+            newItems: newBudgetItems,       // [{ item: "Christmas Gifts", amount: 0, frequency: "", total: 0, primaryCat: "Expenditure", secondaryCat: "Giving", tertiaryCat: "Giving"}, ...]
+            toDo: instruction             // string value which will instruct server what to do (append, overwrite)
             //if there are any additional transaction columns, leave them unchanged in the parsedPayload
           };
 
@@ -705,9 +708,18 @@ export default function ImportData() {
             console.log('Data saved successfully:', result);
             setIsDataSubmitted(true); //setting this to true will conditionally render another component(JSX) on the page instead of transactions table
             setServerResponse(result);
+
+            //close the modal and reset the state
+            setSaveModalState(initialState);
+
             
           } else {
             console.error('Server responded with an error:', response.status);
+            //display the error modal
+            setSaveModalState((prevState) => ({
+              responseErr: true,
+              ...prevState
+            }))
           }
 
         }catch(error){
@@ -1221,6 +1233,8 @@ export default function ImportData() {
           saveModalState={saveModalState}
           setSaveModalState={setSaveModalState}
           saveDataToggle={saveDataToggle}
+          preSubmitCheck={preSubmitCheck}
+          handleDataSubmit={handleDataSubmit}
         />
         
       </SubWrapper>
