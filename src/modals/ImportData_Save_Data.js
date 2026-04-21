@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Modal, ModalBody, ModalHeader,ModalFooter} from 'reactstrap';
+import { Button, Modal, ModalBody, ModalHeader,ModalFooter, Spinner} from 'reactstrap';
 
 /* 
     The state object defined in the parent (ImportData) and passed into this component contains the following properties:
@@ -17,15 +17,17 @@ import { Button, Modal, ModalBody, ModalHeader,ModalFooter} from 'reactstrap';
 export default function SaveModal({
     saveModalState, 
     setSaveModalState,
-    saveDataToggle
+    saveDataToggle,
+    preSubmitCheck,
+    handleDataSubmit
 }){
 
-    //local state variable which will store the modal body string
+    //local state variables which will store the modal elements
     const [header, setHeader] = useState("");
     const [body, setBody] = useState("");
     const [successButton, setSuccessButton] = useState("");
     const [dangerButton, setDangerButton] = useState("");
-    const [useCase, setUseCase] = useState(0);
+    const [loading, setLoading] = useState(false);
 
     const ERROR_HEADER = "ERROR";
     const REGULAR_HEADER = "Confirm Action";
@@ -38,7 +40,14 @@ export default function SaveModal({
     const CANCEL = "Cancel";
     const CONFIRM = "Confirm";
     const OVERWRITE = "Overwrite";
-    const ADD_TO = "Add to";
+    const ADD_TO = "Append";
+    const INSERT = "Insert";
+
+    const initialState = {
+        responseErr : "",  
+        newSubmit : true,     
+        openModal: false,
+    };
 
     
 
@@ -51,7 +60,7 @@ export default function SaveModal({
             setBody(ERROR_BODY);
             setSuccessButton(ERR_SUCCESS);
             setDangerButton(CANCEL);
-            setUseCase(3);
+            
 
         } else{
             if(saveModalState.newSubmit){
@@ -59,39 +68,57 @@ export default function SaveModal({
                 setBody(CONFIRM_BODY);
                 setSuccessButton(CONFIRM);
                 setDangerButton(CANCEL);
-                setUseCase(1);
+                
             } else{
                 setHeader(REGULAR_HEADER);
                 setBody(DEL_OVERWRITE_BODY);
                 setSuccessButton(ADD_TO);
                 setDangerButton(OVERWRITE);
-                setUseCase(2);
+                
             }
         }
     }, [saveModalState]);
 
-    function handleSuccess(caseId){
-        switch(caseId) {
-            case 1: //"Confirm" button
-            // here we need to perform the POST request, sedning the server the (new) transactions
-            //insert logic
-            break;
-            case 2: // "Append" button
-            // here we need to perform the POST request, sending the server the additional trans (and an instruction to append)
-            //insert logic
-            break;
-            case 3: // "Try Again"
-            //here we need to call the preSubmitCheck function again, effectively creating a while loop
-            preSubmitCheck();
-            break;
+    
+
+    async function handleSuccess(modState){ //modState is a copy of state not state itself
+        
+        //render the loading... message
+        setLoading(true);
+
+        if(modState.responseErr){
+            // "Try Again"
+
+            //call the preSubmitCheck function again, effectively creating a while loop
+            await preSubmitCheck();
+            setLoading(false); //display one of 3 modals depending on the response
+
+            //explicitly reset the state obj to initialised state (closes modal)
+            setSaveModalState(initialState);
+            
+
+        } else{
+            if(modState.newSubmit){
+                //"Confirm" button
+                // here we need to perform the POST request, sending the server the (new) transactions to simply insert
+                await handleDataSubmit(INSERT);
+                //display the error modal in the case of a server error (else a success component is rendered)
+                setLoading(false);
+                
+            } else{
+                // "Append" button
+                // here we need to perform the POST request, sending the server the additional trans (and an instruction to append)
+                await handleDataSubmit(ADD_TO);
+                await handleDataSubmit(INSERT);
+                //display the error modal in the case of a server error (else a success component is rendered)
+                setLoading(false);
+            }
         }
+        
         // Close the modal after the action is triggered
         //setSaveModalState(prev => ({ ...prev, openModal: false }));
 
     }
-
-
-
 
 
     //Modal JSX: this modal needs to render one of three sets of JSX (depending on the value of the responseErr and newSubmit object properties)
@@ -99,42 +126,64 @@ export default function SaveModal({
     
     return(
         <div> 
-          <Modal isOpen={saveModalState.openModal} toggle={saveDataToggle}>
-            <ModalHeader saveDataToggle={saveDataToggle}>{header}</ModalHeader>
-                <ModalBody>
-                    {body}
-                    <br />
-                    {
-                        saveModalState.responseErr && (
-                            <em>{saveModalState.responseErr}</em>
-                        )
-                    }
-                </ModalBody>
-            <ModalFooter>
-              <Button color="success" onClick={handleSuccess(useCase)}
-              >
-                {successButton}
-              </Button>
-              <Button color="danger" onClick={(e) => {
+            <Modal isOpen={saveModalState.openModal} toggle={saveDataToggle}>
+                {/* Modal Header */}
+                {   loading ? 
+                        <ModalHeader saveDataToggle={saveDataToggle}>Please Wait</ModalHeader> : 
+                        <ModalHeader saveDataToggle={saveDataToggle}>{header}</ModalHeader>
+                }
+                {/* Modal Body */}
+                {
+                    loading ? 
+                        <ModalBody>
+                            <p>Performing operation....</p>
+                            <Spinner
+                                color="primary"
+                                style={{
+                                height: '3rem',
+                                width: '3rem'
+                                }}
+                            >
+                                Loading...
+                            </Spinner>
+                        </ModalBody> :
+                        <ModalBody>
+                            {body}
+                            <br />
+                            {
+                                saveModalState.responseErr && (
+                                    <em>{saveModalState.responseErr}</em>
+                                )
+                            }
+                        </ModalBody>
+                }
+                {/* Modal Footer */}
+                {
+                    !loading && (
+                        <ModalFooter>
+                            <Button color="success" onClick={()=> handleSuccess(saveModalState)}
+                            >
+                                {successButton}
+                            </Button>
+                            <Button color="danger" onClick={(e) => {
 
-                //stop the dropdown and submenu from closing
-                e.preventDefault(); 
-                e.stopPropagation(); 
+                                //stop the dropdown and submenu from closing
+                                e.preventDefault(); 
+                                e.stopPropagation(); 
 
-                //close modal
-                saveDataToggle();
+                                //close modal
+                                saveDataToggle();
 
-                // reset state
-                
-            
-              }}
-              >
-                {dangerButton}
-              </Button>
-            </ModalFooter>
-          </Modal>
+                                // reset state
+                            }}
+                            >
+                                {dangerButton}
+                            </Button>
+                        </ModalFooter>
+
+                    )
+                }
+            </Modal>
         </div>
-
     );
-
 }
