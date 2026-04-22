@@ -172,7 +172,8 @@ export default function ImportData() {
       const[saveModalState, setSaveModalState] = useState({
         responseErr : "",  // if truthy, opens a custom error modal in the event that !response.ok ('Try Again'/'Cancel')
         newSubmit : true,     // this valus is used to open either a confirm modal ('Confirm'/'Cancel') or a ('Delete'/'Overwrite') modal 
-        openModal: false,     // this value controls whether the modal is open or closed  
+        openModal: false,     // this value controls whether the modal is open or closed
+        handleSubmitErr: ""         // will be set to true in handleDataSubmit if the server returns an error (500)
       });
 
       // toggle function which is called to open/close modal
@@ -620,9 +621,10 @@ export default function ImportData() {
         */
 
         const initialState = {
-            responseErr : "",  
-            newSubmit : true,     
-            openModal: false,
+          responseErr : "",  
+          newSubmit : true,     
+          openModal: false,
+          handleSubmitErr: "" 
         };
         
         //define the route url
@@ -688,18 +690,18 @@ export default function ImportData() {
             year: selectedYear,
             transactions: parsedPayload,  // [{ id: 2, Date: "24/12/2024", Amount: -65, Description: "INDEPAL...", Balance: 1149.59, itemName: "Christmas Gifts" },...]
             newItems: newBudgetItems,       // [{ item: "Christmas Gifts", amount: 0, frequency: "", total: 0, primaryCat: "Expenditure", secondaryCat: "Giving", tertiaryCat: "Giving"}, ...]
-            toDo: instruction             // string value which will instruct server what to do (append, overwrite)
+            toDo: instruction             // string value which will instruct server what to do (append, overwrite, insert)
             //if there are any additional transaction columns, leave them unchanged in the parsedPayload
           };
 
 
           // Perform the POST request
           const response = await fetch(url, {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json', // Set the content type to JSON
-              },
-              body: JSON.stringify(payload), // Convert the payload to JSON string
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json', // Set the content type to JSON
+            },
+            body: JSON.stringify(payload), // Convert the payload to JSON string
           });
 
           // Handle the server response
@@ -712,21 +714,22 @@ export default function ImportData() {
             //close the modal and reset the state
             setSaveModalState(initialState);
 
-            
+            //only reset the newBudgetItems state if server operation was successful
+            setNewBudgetItems([]);
+
           } else {
             console.error('Server responded with an error:', response.status);
             //display the error modal
             setSaveModalState((prevState) => ({
+              ...prevState,
               responseErr: true,
-              ...prevState
+              handleSubmitErr: true
+              
             }))
           }
 
         }catch(error){
           console.error('Fetch error:', error);
-        }finally{
-          //reset the newBudgetItems state
-          setNewBudgetItems([]);
         }
 
       };
