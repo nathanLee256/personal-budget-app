@@ -7,7 +7,8 @@ import { Button, Modal, ModalBody, ModalHeader,ModalFooter, Spinner} from 'react
     const[saveModalState, setSaveModalState] = useState({
         responseErr : "",  // if truthy (an error message has been assigned) which will open a custom error modal('Try Again'/'Cancel')
         newSubmit : true,     // this valus is used to open either a confirm modal ('Confirm'/'Cancel') or a ('Delete'/'Overwrite') modal 
-        openModal: false,     // this value controls whether the modal is open or closed  
+        openModal: false,     // this value controls whether the modal is open or closed
+        handleSubmitErr: ""  
     });
 
 
@@ -89,12 +90,30 @@ export default function SaveModal({
         if(modState.responseErr){
             // "Try Again"
 
-            //call the preSubmitCheck function again, effectively creating a while loop
-            await preSubmitCheck();
-            setLoading(false); //display one of 3 modals depending on the response
+            if(modState.handleSubmitErr){
+                //call handleDataSubmit() to try again in the event of a server Err from the /save_budget_data route
+                if(modState.newSubmit){
+                    //"Confirm" button
+                    // here we need to perform the POST request, sending the server the (new) transactions to simply insert
+                    await handleDataSubmit(INSERT);
+                    //display the error modal in the case of a server error (else a success component is rendered)
+                    setLoading(false);
+                
+                } else{
+                    // "Append" button
+                    // here we need to perform the POST request, sending the server the additional trans (and an instruction to append)
+                    await handleDataSubmit(ADD_TO);
+                    //display the error modal in the case of a server error (else a success component is rendered)
+                    setLoading(false);
+                }
+            }else{
+                //call the preSubmitCheck function again, effectively creating a while loop
+                await preSubmitCheck();
+                setLoading(false); //display one of 3 modals depending on the response
 
-            //explicitly reset the state obj to initialised state (closes modal)
-            setSaveModalState(initialState);
+                //explicitly reset the state obj to initialised state (closes modal)
+                //setSaveModalState(initialState);
+            }
             
 
         } else{
@@ -109,7 +128,6 @@ export default function SaveModal({
                 // "Append" button
                 // here we need to perform the POST request, sending the server the additional trans (and an instruction to append)
                 await handleDataSubmit(ADD_TO);
-                await handleDataSubmit(INSERT);
                 //display the error modal in the case of a server error (else a success component is rendered)
                 setLoading(false);
             }
