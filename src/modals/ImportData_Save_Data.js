@@ -48,6 +48,7 @@ export default function SaveModal({
         responseErr : "",  
         newSubmit : true,     
         openModal: false,
+        handleSubmitErr: ""        
     };
 
     
@@ -100,11 +101,23 @@ export default function SaveModal({
                     setLoading(false);
                 
                 } else{
-                    // "Append" button
-                    // here we need to perform the POST request, sending the server the additional trans (and an instruction to append)
-                    await handleDataSubmit(ADD_TO);
-                    //display the error modal in the case of a server error (else a success component is rendered)
-                    setLoading(false);
+
+                    if(!newSubmit){
+                        //if !newSubmit it means the user clicked to Overwrite and there was a server error
+                        //in which case we need the 'Try Again' button needs to send the 'Overwrite instruction'
+                        await handleDataSubmit(OVERWRITE);
+                        setLoading(false);
+
+                    } else{
+                        //otherwise it means the user has clicked the 'Confirm' button and there was a server error
+                        // in which case we need to tell handleData Submit to 'Append'
+                        
+                        await handleDataSubmit(ADD_TO);
+                        //display the error modal in the case of a server error (else a success component is rendered)
+                        setLoading(false);
+
+                    }
+                    
                 }
             }else{
                 //call the preSubmitCheck function again, effectively creating a while loop
@@ -133,6 +146,52 @@ export default function SaveModal({
             }
         }
         
+        // Close the modal after the action is triggered
+        //setSaveModalState(prev => ({ ...prev, openModal: false }));
+
+    }
+
+    async function handleDanger(modState){ //modState is a copy of state not state itself
+        
+        //render the loading... message
+        setLoading(true);
+
+        if(!modState.newSubmit){
+            //if True it means the 'Append/Overwrite' modal was rendered and the user clicked the 'OverWrite' button
+            // in which case we need to call the server route and send it the 'Overwrite' instruction, 
+            // then handle the server response
+            /*
+                initialState = {
+                    openModal: true,
+                    responseErr: "",
+                    handleSubmitErr: false,
+                    newSubmit: false
+                }
+
+            */
+            await handleDataSubmit(OVERWRITE);
+            //the server will either send back a success object containing the inserted rows, 
+            // in which case the state obj is reset and the modal closes.
+            // if the server encounters an error, handleDataSubmit will update the state to the following:
+            /*
+                setSaveModalState((prevState) => ({
+                    ...prevState,  //newSubmit wil be false, openModal will be true
+                    responseErr: true,
+                    handleSubmitErr: true
+                    
+                })) 
+            */
+            //this should render the 'Try Again'/'Cancel' modal
+            
+
+        }else{
+            //if T it means the user has clicked the 'Cancel' button in either the 'Try Again'/'Cancel' modal or the 'Confirm'/'Cancel'
+            // in either case we simply need to close the modal and reset the state
+            setSaveModalState(initialState);
+
+        }
+
+
         // Close the modal after the action is triggered
         //setSaveModalState(prev => ({ ...prev, openModal: false }));
 
