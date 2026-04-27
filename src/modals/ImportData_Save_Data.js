@@ -51,6 +51,21 @@ export default function SaveModal({
         handleSubmitErr: ""        
     };
 
+    //helper function
+    function returnCase(obj){
+        if(obj.responseErr){
+            if(obj.handleSubmitErr){
+                return 4;
+            }
+            return 3;
+        }else{
+            if(!obj.newSubmit){
+                return 2;
+            }
+            return 1;
+        }
+    }
+
     
 
     //component useEffect hook function with cleanup
@@ -87,6 +102,29 @@ export default function SaveModal({
         
         //render the loading... message
         setLoading(true);
+        switch(returnCase(modState)){
+            case 1:
+                
+                //if T it means user clicked confirm to submit data (no prev submissions)
+                //in which case we need to simply send the server the (new) transactions to simply insert
+                await handleDataSubmit(INSERT);
+                setLoading(false);
+
+                break;
+            case 2:
+                //code block
+                break;
+            case 3:
+                //code block
+                break;
+            case 4:
+                //code block
+                break;
+            default:
+
+
+
+        }
 
         if(modState.responseErr){
             // "Try Again"
