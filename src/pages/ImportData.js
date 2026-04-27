@@ -722,10 +722,10 @@ export default function ImportData() {
             //display the error modal
             setSaveModalState((prevState) => ({
               ...prevState,
-              responseErr: true,
+              responseErr: "Server responded with an error.",
               handleSubmitErr: true
               
-            }))
+            }));
           }
 
         }catch(error){
