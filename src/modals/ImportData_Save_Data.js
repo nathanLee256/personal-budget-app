@@ -107,12 +107,21 @@ export default function SaveModal({
                 
                 //if T it means user clicked confirm to submit data (no prev submissions)
                 //in which case we need to simply send the server the (new) transactions to simply insert
+                
+                //if the fetch was successful, the server route will send a json object containing the 
+                // inserted transactions and a message. the isDataSubmitted state will be set to T to
+                // render the success component. If there was a server error, the saveModalState will
+                //be set to render modal 4. Note that since the action we perform in this case is the same
+                //as the next, we can let this case "fall through" to case 2.
+
+            case 2:
+                //if T it means user clicked 'Append' to insert the new data onto the previously submitted data
+                //in which case we need to send the server the transactions with the instruction to also insert
                 await handleDataSubmit(INSERT);
                 setLoading(false);
-
-                break;
-            case 2:
-                //code block
+                //if the fetch was successful, the server will send the json response to display the success component.
+                //if there was a server error then handleDataSubmit will set the state obj to display modal 4
+                //note that in this case newSubmit will still be false
                 break;
             case 3:
                 //code block
