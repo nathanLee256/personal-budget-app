@@ -182,6 +182,10 @@ export default function ImportData() {
           openModal : !prevState.openModal // reverse the openModal bool to open/close modal
       }));
 
+      // a state which is set in handleDataSubmit() when the server returns an error which contains the last 
+      // instruction it received (e.g. 'OverWrite' or 'Append')
+      const[prevInstruction, setPrevInstruction] = useState("");
+
     //END STATE 12
 
   // END DEFINE STATE/USEEffect
@@ -717,19 +721,34 @@ export default function ImportData() {
             //only reset the newBudgetItems state if server operation was successful
             setNewBudgetItems([]);
 
+            setPrevInstruction(instruction);  //set the state so it is available in the modal component
+            return { success: true, result }; // Explicit success return
+
           } else {
+            
+            // SERVER ERROR: Server said "I heard you, but No (404/500)."
             console.error('Server responded with an error:', response.status);
-            //display the error modal
-            setSaveModalState((prevState) => ({
+            setSaveModalState(prevState => ({
               ...prevState,
               responseErr: "Server responded with an error.",
               handleSubmitErr: true
-              
             }));
+
+            setPrevInstruction(instruction);
+            return { success: false, prevInstruction : instruction }; // Return the instruction as requested
           }
 
         }catch(error){
+          
+          // NETWORK ERROR: "I couldn't even reach the server."
           console.error('Fetch error:', error);
+          setSaveModalState(prevState => ({
+            ...prevState,
+            responseErr: "Network error. Please check your connection.",
+            handleSubmitErr: true
+          }));
+
+          return { success: false, prevInstruction : instruction };
         }
 
       };
@@ -1238,6 +1257,7 @@ export default function ImportData() {
           saveDataToggle={saveDataToggle}
           preSubmitCheck={preSubmitCheck}
           handleDataSubmit={handleDataSubmit}
+          prevInstruction={prevInstruction}
         />
         
       </SubWrapper>
