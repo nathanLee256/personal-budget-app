@@ -20,7 +20,8 @@ export default function SaveModal({
     setSaveModalState,
     saveDataToggle,
     preSubmitCheck,
-    handleDataSubmit
+    handleDataSubmit,
+    prevInstruction
 }){
 
     //local state variables which will store the modal elements
@@ -29,6 +30,7 @@ export default function SaveModal({
     const [successButton, setSuccessButton] = useState("");
     const [dangerButton, setDangerButton] = useState("");
     const [loading, setLoading] = useState(false);
+
 
     const ERROR_HEADER = "ERROR";
     const REGULAR_HEADER = "Confirm Action";
@@ -51,7 +53,7 @@ export default function SaveModal({
         handleSubmitErr: ""        
     };
 
-    //helper function
+    //helper function which examines the current state object and returns the modal ID which needs to be rendered based on the state
     function returnCase(obj){
         if(obj.responseErr){
             if(obj.handleSubmitErr){
@@ -112,135 +114,89 @@ export default function SaveModal({
                 // inserted transactions and a message. the isDataSubmitted state will be set to T to
                 // render the success component. If there was a server error, the saveModalState will
                 //be set to render modal 4. Note that since the action we perform in this case is the same
-                //as the next, we can let this case "fall through" to case 2.
+                //as the next, we can let this case "fall through" to case 2. Now the handleDataSubmit() function
+                //always returns an obj. Either { success: false, prevInstruction : instruction } or { success: true, result }
 
             case 2:
                 //if T it means user clicked 'Append' to insert the new data onto the previously submitted data
                 //in which case we need to send the server the transactions with the instruction to also insert
-                await handleDataSubmit(INSERT);
+                const returnObj = await handleDataSubmit(INSERT);
                 setLoading(false);
                 //if the fetch was successful, the server will send the json response to display the success component.
+                //handleSubmit will reset the modal state
                 //if there was a server error then handleDataSubmit will set the state obj to display modal 4
                 //note that in this case newSubmit will still be false
                 break;
             case 3:
-                //code block
+                //if T it means user clicked the 'Try Again' button in Modal 3 after an error occurred in preSubmitCheck() fetch
+                // in this case we need to call the function again. It will run and check the db and update the state obj
+                // to render modals 1, 2, or 3, depending on the result (newSubmission and error)
+                await preSubmitCheck();
+                setLoading(false);
                 break;
             case 4:
-                //code block
+                //if T it means user clicked the 'Try Again' button in modal 4 after an error occurred in handleDataSubmit().
+                //in this case we need to call the function again and pass it the instruction param (either 'Append' or 'Overwrite')
+
+                if(prevInstruction && prevInstruction === OVERWRITE){
+                    const returnObj = await handleDataSubmit(OVERWRITE);
+                    setLoading(false);
+                }else{
+                    if(prevInstruction && prevInstruction === ADD_TO){
+                        const returnObj = await handleDataSubmit(ADD_TO);
+                        setLoading(false);
+                    }
+                }
+                //in either case, handleSubmit() resets the modal state in the event of a successful fetch. Else the values persist
                 break;
             default:
 
-
-
         }
-
-        if(modState.responseErr){
-            // "Try Again"
-
-            if(modState.handleSubmitErr){
-                //call handleDataSubmit() to try again in the event of a server Err from the /save_budget_data route
-                if(modState.newSubmit){
-                    //"Confirm" button
-                    // here we need to perform the POST request, sending the server the (new) transactions to simply insert
-                    await handleDataSubmit(INSERT);
-                    //display the error modal in the case of a server error (else a success component is rendered)
-                    setLoading(false);
-                
-                } else{
-
-                    if(!newSubmit){
-                        //if !newSubmit it means the user clicked to Overwrite and there was a server error
-                        //in which case we need the 'Try Again' button needs to send the 'Overwrite instruction'
-                        await handleDataSubmit(OVERWRITE);
-                        setLoading(false);
-
-                    } else{
-                        //otherwise it means the user has clicked the 'Confirm' button and there was a server error
-                        // in which case we need to tell handleData Submit to 'Append'
-                        
-                        await handleDataSubmit(ADD_TO);
-                        //display the error modal in the case of a server error (else a success component is rendered)
-                        setLoading(false);
-
-                    }
-                    
-                }
-            }else{
-                //call the preSubmitCheck function again, effectively creating a while loop
-                await preSubmitCheck();
-                setLoading(false); //display one of 3 modals depending on the response
-
-                //explicitly reset the state obj to initialised state (closes modal)
-                //setSaveModalState(initialState);
-            }
-            
-
-        } else{
-            if(modState.newSubmit){
-                //"Confirm" button
-                // here we need to perform the POST request, sending the server the (new) transactions to simply insert
-                await handleDataSubmit(INSERT);
-                //display the error modal in the case of a server error (else a success component is rendered)
-                setLoading(false);
-                
-            } else{
-                // "Append" button
-                // here we need to perform the POST request, sending the server the additional trans (and an instruction to append)
-                await handleDataSubmit(ADD_TO);
-                //display the error modal in the case of a server error (else a success component is rendered)
-                setLoading(false);
-            }
-        }
-        
-        // Close the modal after the action is triggered
-        //setSaveModalState(prev => ({ ...prev, openModal: false }));
 
     }
 
     async function handleDanger(modState){ //modState is a copy of state not state itself
         
-        //render the loading... message
-        setLoading(true);
+        switch(returnCase(modState)){
+            case 1:
+                
+                //if T it means modal 1 was rendered (which prompts user to insert their transactions- no prev submissions) and 
+                // user clicked 'Cancel' in modal 1  in which case we need to simply close the modal (reset the modal state)
+                // case falls through to case 4 code block since the action is the same in cases 1, 3, and 4
+                /* 
+                    If you simply close the modal without refreshing the page (window.location.reload()) or clearing your data arrays, 
+                    the app will remain in its current state. The user can click the button, the handleDataSubmit function will fire, 
+                    the fetch will re-verify the status with the server, and the modal will pop up again—exactly like the first time.
+                */
+                
+                
+            case 3:
+                //if T it means modal 3 was rendered which is displayed when the fetch in 
+                // preSubmit() returns an error after the user clicks the 'Save Budget Data' button or clicks 'Try again' button when 
+                // this modal (3) is re-rendered- and user clicked 'Cancel' button. In this case, once again we simply close the modal
+                
+            case 4:
+                //if T it means modal 4 was rendered which is displayed when user clicked 'Confirm' in modal 1, 'Append' or 'Overwrite'
+                // in modal 2, or 'Try Again' in modal 4, and the fetch in handleDataSubmit() returned an error. In these cases, once
+                //again, we just close the modal (by resetting its state)
+                setSaveModalState(initialState);
+                
+                break;
+            case 2:
+                //this is the only unique case. If T it means modal 2 was rendered after a successful preSubmitCheck which 
+                //returned { newSubmission : false }, and the user clicked the 'Overwrite' button. In this case we need to
+                // call handleDataSubmit and instruct it to overwrite the previously submitted data
+                const returnObj = await handleDataSubmit(OVERWRITE);
+                setLoading(false);
 
-        if(!modState.newSubmit){
-            //if True it means the 'Append/Overwrite' modal was rendered and the user clicked the 'OverWrite' button
-            // in which case we need to call the server route and send it the 'Overwrite' instruction, 
-            // then handle the server response
-            /*
-                initialState = {
-                    openModal: true,
-                    responseErr: "",
-                    handleSubmitErr: false,
-                    newSubmit: false
-                }
+                //handleDataSubmit will either 1-return a success object and reset the modal state to close the modal and 
+                //display the success component, or 2- return a fail object and set the modal state to render modal 4 again
+                
+                break;
+            default:
 
-            */
-            await handleDataSubmit(OVERWRITE);
-            //the server will either send back a success object containing the inserted rows, 
-            // in which case the state obj is reset and the modal closes.
-            // if the server encounters an error, handleDataSubmit will update the state to the following:
-            /*
-                setSaveModalState((prevState) => ({
-                    ...prevState,  //newSubmit wil be false, openModal will be true
-                    responseErr: true,
-                    handleSubmitErr: true
-                    
-                })) 
-            */
-            //this should render the 'Try Again'/'Cancel' modal
-            
+        };
 
-        }else{
-            //if T it means the user has clicked the 'Cancel' button in either the 'Try Again'/'Cancel' modal or the 'Confirm'/'Cancel'
-            // in either case we simply need to close the modal and reset the state
-            setSaveModalState(initialState);
-
-        }
-
-
-        // Close the modal after the action is triggered
-        //setSaveModalState(prev => ({ ...prev, openModal: false }));
 
     }
 
