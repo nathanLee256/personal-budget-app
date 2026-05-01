@@ -23,10 +23,26 @@ import { useNavigate } from "react-router-dom";
         //render the main JSX
     }
 
+    in handleSubmit(), if the fetch resolved successfully, the serverResponse state will be set to the response object
+    which is expected to be in the following form (If insertedItems is truthy):
+    {
+        "newItems": "Success message here",
+        "newItemsInserted": [...array of newly inserted budget items...],
+        "newTransactions": "Success message here",
+        "newTransInserted": [...array of newly inserted transactions...]
+    }
+    or it could also be (if insertedItems is falsy):
+    {
+        "newTransactions": "Success message here",
+        "newTransInserted": [...array of transactions...]
+    }
+
+
 */
 
 export default function SuccessfulSave({
     //props
+    serverResponse //array 
 }){
 
     
@@ -42,66 +58,7 @@ export default function SuccessfulSave({
     //
     const navigate = useNavigate();
 
-    /*  Now what we need to do is iterate over the dataObj object, down to the level-3 properties in order to extract
-        an array of data objects which can be used to populate the table. Data objects need to be in the form of 
-        {
-            userId: 1, 
-            primaryCategory: 'Income'
-            secondaryCategory: 'Standard',
-            tertiaryCategory: 'StandardIncome',
-            item: 'Salary',
-            amount: 400,
-            frequency: 'Weekly',
-            total: 1600
-        } 
-        But this needs to be done in a useEffect becuase the code block updates the state in the inner for loop which
-        triggers an infinte loop of re-renders: everytime the state changes the component is re-rendered
-    */
-    useEffect(()=>{
-        //use the nested for loop method
-        const ZERO = 0;
-        const newRowData = [];
-
-        // outer for loop selects a level-1 property (e.g. Income, Expenditure) from the original object 
-        for(const primaryCat in dataObj){
-            if(primaryCat === "UserId") continue; // skip the userId property
-            const categories = dataObj[primaryCat]; // select the value stored in the primaryCat key of the dataObj and assign 
-            //categories is an object containing the secondary categories 
-
-            // next for loop selects a level-2 property (e.g. Benefit, Other) from the categories object
-            for(const secondaryCat in categories){
-                /* select the value stored in the secondaryCat key of the categories object and assign
-                secondaryCategories becomes an object containing the level-3 properties of a secondary category */
-                const secondaryCategories = categories[secondaryCat]; 
-
-                //inner for loop to extract the arrays from the level-3 properties
-                for(const tertiaryCat in secondaryCategories){
-                    /* dataArray will be an array of data objects stored in a level-3 property
-                    data objects will be in the form of {"item": "Salary", "amount": 500, "frequency": "Weekly", "total": 1600} */
-                    const dataArray = secondaryCategories[tertiaryCat]; 
-
-                    /* if there is one or more data arrays stored in the level-3 property we need to append it to the rowData state array */
-                    if(Array.isArray(dataArray) && dataArray.length > ZERO){
-
-                        //create a new array of data objects
-                        const modifiedArray = dataArray.map((obj)=>(
-                            
-                            {   
-                                userId: userId, 
-                                primaryCategory: primaryCat, 
-                                secondaryCategory: secondaryCat,
-                                tertiaryCategory: tertiaryCat,
-                                ...obj             
-                            }
-                        ));
-                        newRowData.push(...modifiedArray);   
-                    }
-                }
-            }
-        }
-        setRowData(newRowData);
-
-    },[]); //I think we only need this to run once when the component mounts
+    
 
         
 
@@ -109,22 +66,24 @@ export default function SuccessfulSave({
         // the user submitted
         const renderTableHeaders = () => {
         
-            const totalColumns = 8;
+            const totalColumns = 10;
             
             const rowArray = new Array(totalColumns).fill(""); // Initialize an array to define 4 table columns with empty strings
-            rowArray[0] = "User Id";
-            rowArray[1] = "Primary Category";
-            rowArray[2] = "Secondary Category";
-            rowArray[3] = "Tertiary Category";
-            rowArray[4] = "Item";
-            rowArray[5] = "Amount";
-            rowArray[6] = "Frequency";
-            rowArray[7] = "4-Weekly Total";
+            rowArray[0] = "Transaction Id";
+            rowArray[1] = "User Id";
+            rowArray[2] = "Primary Category"
+            rowArray[3] = "Secondary Category";
+            rowArray[4] = "Tertiary Category";
+            rowArray[5] = "Budget Item";
+            rowArray[6] = "Amount";
+            rowArray[7] = "Description";
+            rowArray[8] = "Date";
+            rowArray[9] = "Created At"
 
             
 
             // Define widths for each column
-            const columnWidths = ["7.5%", "12.5%", "15%", "15%", "15%", "10%", "12.5%", "12.5%"];
+            const columnWidths = ["5%", "5%", "10%", "10%", "10%", "10%", "5%", "25%", "10%", "10%"];
         
             return (
             <thead>
@@ -140,7 +99,7 @@ export default function SuccessfulSave({
 
         const renderTableRows = () => (
             <tbody>
-                {rowData.map((row, rowIndex) => (
+                {serverResponse.newTransInserted.map((row, rowIndex) => (
                     <tr key={rowIndex}>
                         <td>
                             {row.userId}
