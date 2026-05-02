@@ -9,6 +9,7 @@ import SelectFile from '../components/SelectFile.js';
 import AddItemForm from '../components/AddItemForm.js';
 import CustomDropdown from '../components/CustomDropdown.js';
 import SaveModal from '../modals/ImportData_Save_Data.js';
+import SuccessfulSave from '../components/SuccessfulSave.js';
 
 
 /*  
@@ -1146,12 +1147,52 @@ export default function ImportData() {
       )
     };
 
-  //END HELPER functions
+    //a function to use in the switch which determines which set of main JSX the page renders
+    function chooseJSX (usrDataState, submittedState){
+      const ZERO = 0;
+      if(usrDataState.length > ZERO){
+        if(submittedState){
+          //render JSX set 3 (success page after successful submission)
+          return 3;
+        }else{
+          //render the list of uploaded transactions for user to categorise
+          return 2;
+        }
+      }else{
+        //render SelectFile
+        return 1;
+      }
+    }
 
 
-  // MAIN JSX: consists of two unique sets of JSX which are conditionally rendered depending on the userData state
-  if (userData.length > 0) {
-    return (
+    //helper function to render JSX 1
+    const renderJSXOne = () => (
+      <> 
+        <SelectFile
+
+          yearLabels={yearLabels}
+          setYearLabels={setYearLabels}
+
+          selectedMonth={selectedMonth}
+          setSelectedMonth={setSelectedMonth}
+
+          selectedYear={selectedYear}
+          setSelectedYear={setSelectedYear}
+
+          file={file}
+          setFile={setFile}
+
+          userData={userData}
+          setUserData={setUserData}
+        
+        />
+        <MyAppFooter/>
+      </>
+
+    );
+
+    //helper function to render JSX 2
+    const renderJSXTwo = () => (
       <SubWrapper>
         <StyledContainer>
           <h2>
@@ -1261,32 +1302,37 @@ export default function ImportData() {
         />
         
       </SubWrapper>
+      
     );
-  } else {
-    return (
-      <> 
-        <SelectFile
 
-          yearLabels={yearLabels}
-          setYearLabels={setYearLabels}
-
-          selectedMonth={selectedMonth}
-          setSelectedMonth={setSelectedMonth}
-
-          selectedYear={selectedYear}
-          setSelectedYear={setSelectedYear}
-
-          file={file}
-          setFile={setFile}
-
-          userData={userData}
-          setUserData={setUserData}
-        
-        />
-        <MyAppFooter/>
-      </>
+    //helper function to render JSX 3
+    const renderJSXThree = () => (
+      <SubWrapper>
+          <StyledContainer>
+              <SuccessfulSave serverResponse={serverResponse}/>
+          </StyledContainer>
+      </SubWrapper>
     );
-  }
+
+
+
+  //END HELPER functions
+
+
+
+
+  // MAIN JSX: runs a callback function which chooses the set of JSX to render based on state
+  return (
+    <>
+      {(() => {
+        const view = chooseJSX(userData, isDataSubmitted);
+        if (view === 1) return renderJSXOne();
+        if (view === 2) return renderJSXTwo();
+        if (view === 3) return renderJSXThree();
+        return renderJSXOne();
+      })()}
+    </>
+  );
 }
 
 //Styles
