@@ -36,8 +36,20 @@ import { useNavigate } from "react-router-dom";
         "newTransactions": "Success message here",
         "newTransInserted": [...array of transactions...]
     }
-
-
+    Each transaction object is expected to be in the following form (the server route mapped db columns to React table columns)
+    
+    {
+        "Transaction ID": 101,
+        "Amount": 55.50,
+        "Description": "Grocery Store",
+        "Date": "2026-05-01",
+        "Primary Cat": "Food",
+        "Secondary Cat": "Groceries",
+        "Tertiary Cat": "Weekly Shop",
+        "Budget Item": "Weekly Food Budget",
+        "Inserted At": "2026-05-02 10:00:00"
+    }
+        
 */
 
 export default function SuccessfulSave({
@@ -45,90 +57,93 @@ export default function SuccessfulSave({
     serverResponse //array 
 }){
 
-    
-    //NOTE: the code below has been pasted in from the Worksheet success component which does the same thing. I need to modify the 
-    //implementation
-    
     //create a state array which will be used to populate the rows of the table
     const[rowData, setRowData] = useState([]);
 
     //state for Collapse
     const[isOpen, setIsOpen] = useState(false);
 
-    //
+    //navigation obj
     const navigate = useNavigate();
 
     
-
-        
-
     //START- 2 functions which return the JSX to render the columns and rows of the reactstrap table which shows the data
         // the user submitted
         const renderTableHeaders = () => {
         
-            const totalColumns = 10;
-            
-            const rowArray = new Array(totalColumns).fill(""); // Initialize an array to define 4 table columns with empty strings
-            rowArray[0] = "Transaction Id";
-            rowArray[1] = "User Id";
-            rowArray[2] = "Primary Category"
-            rowArray[3] = "Secondary Category";
-            rowArray[4] = "Tertiary Category";
-            rowArray[5] = "Budget Item";
-            rowArray[6] = "Amount";
-            rowArray[7] = "Description";
-            rowArray[8] = "Date";
-            rowArray[9] = "Created At"
+            if(Array.isArray(serverResponse.newTransInserted) && serverResponse.newTransInserted.length > 0){
+                const rowArray = Object.keys(serverResponse.newTransInserted[0]);
 
+                // Define widths for each column
+                const columnWidths = ["10%", "5%", "25%", "10%", "10%", "10%", "10%", "10%", "10%"];
             
-
-            // Define widths for each column
-            const columnWidths = ["5%", "5%", "10%", "10%", "10%", "10%", "5%", "25%", "10%", "10%"];
+                return (
+                    <thead>
+                        <tr>
+                            {rowArray.map((val, index) => (
+                                <th key={index} style={{ width: columnWidths[index] }}>{val}</th>
+                            ))}
+                        </tr>
+                    </thead>
+                );
+            }
         
-            return (
-            <thead>
-                <tr>
-                    {rowArray.map((val, index) => (
-                        <th key={index} style={{ width: columnWidths[index] }}>{val}</th>
-                    ))}
-                </tr>
-            </thead>
-            );
+            
         
         };
 
-        const renderTableRows = () => (
-            <tbody>
-                {serverResponse.newTransInserted.map((row, rowIndex) => (
-                    <tr key={rowIndex}>
-                        <td>
-                            {row.userId}
-                        </td>
-                        <td>
-                            {row.primaryCategory} 
-                        </td>
-                        <td>
-                            {row.secondaryCategory}
-                        </td>
-                        <td>
-                            {row.tertiaryCategory}
-                        </td>
-                        <td>
-                            {row.item}
-                        </td>
-                        <td>
-                            ${row.amount ? row.amount.toFixed(2) : "0.00"}
-                        </td>
-                        <td>
-                            {row.frequency}
-                        </td>
-                        <td>
-                            ${row.total? row.total.toFixed(2) : "0.00"}
-                        </td>
-                    </tr>
-                ))}
-            </tbody>
-        );
+        const renderTableRows = () => {
+            if(Array.isArray(serverResponse.newTransInserted) && serverResponse.newTransInserted.length > 0){
+                const transObjKeys = Object.keys(serverResponse.newTransInserted[0]);
+
+                return(
+                    <tbody>
+                        {serverResponse.newTransInserted.map((transObj, rowIndex) => (
+                            <tr key={rowIndex}>
+                                <td>
+                                    {/* Transaction ID column value */}
+                                    {transObj[transObjKeys[0]]}
+                                </td>
+                                <td>
+                                    {/* Amount column value */}
+                                    ${transObj[transObjKeys[1]]} 
+                                </td>
+                                <td>
+                                    {/* Description column value */}
+                                    {transObj[transObjKeys[2]]}
+                                </td>
+                                <td>
+                                    {/* Date column value */}
+                                    {transObj[transObjKeys[3]]}
+                                </td>
+                                <td>
+                                    {/* Primary Cat column value */}
+                                    {transObj[transObjKeys[4]]}
+                                </td>
+                                <td>
+                                    {/* Secondary Cat column value */}
+                                    {transObj[transObjKeys[5]]}
+                                </td>
+                                <td>
+                                    {/* Tertiary Cat column value */}
+                                    {transObj[transObjKeys[6]]}
+                                </td>
+                                <td>
+                                    {/* Budget Item column value */}
+                                    {transObj[transObjKeys[7]]}
+                                </td>
+                                <td>
+                                    {/* Inserted At column value */}
+                                    {transObj[transObjKeys[8]]}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                );
+            }
+
+            
+        }
     // END FUNCTIONS
 
     //Collapse event handler (i.e. a function which opens/closes the Collapse element)
