@@ -130,7 +130,13 @@ export default function SaveModal({
             case 3:
                 //if T it means user clicked the 'Try Again' button in Modal 3 after an error occurred in preSubmitCheck() fetch
                 // in this case we need to call the function again. It will run and check the db and update the state obj
-                // to render modals 1, 2, or 3, depending on the result (newSubmission and error)
+                // to render modals 1, 2, or 3, depending on the result (newSubmission and error). 
+                //But before we must
+                // call the function again we should reset the .responseErr prop of the modal state (currently truthy)
+                setSaveModalState((prevState) => ({
+                    ...prevState,
+                    responseErr: ""
+                }))
                 await preSubmitCheck();
                 setLoading(false);
                 break;
@@ -174,15 +180,19 @@ export default function SaveModal({
                 //if T it means modal 3 was rendered which is displayed when the fetch in 
                 // preSubmit() returns an error after the user clicks the 'Save Budget Data' button or clicks 'Try again' button when 
                 // this modal (3) is re-rendered- and user clicked 'Cancel' button. In this case, once again we simply close the modal
+                //  but before we close the modal we should reset the state obj
+                
+
                 
             case 4:
                 //if T it means modal 4 was rendered which is displayed when user clicked 'Confirm' in modal 1, 'Append' or 'Overwrite'
                 // in modal 2, or 'Try Again' in modal 4, and the fetch in handleDataSubmit() returned an error. In these cases, once
                 //again, we just close the modal (by resetting its state)
                 setSaveModalState(initialState);
+                setLoading(false);
                 
                 break;
-            case 2:
+            case 2: {
                 //this is the only unique case. If T it means modal 2 was rendered after a successful preSubmitCheck which 
                 //returned { newSubmission : false }, and the user clicked the 'Overwrite' button. In this case we need to
                 // call handleDataSubmit and instruct it to overwrite the previously submitted data
@@ -193,6 +203,8 @@ export default function SaveModal({
                 //display the success component, or 2- return a fail object and set the modal state to render modal 4 again
                 
                 break;
+            }
+                
             default:
 
         };
@@ -245,17 +257,7 @@ export default function SaveModal({
                             >
                                 {successButton}
                             </Button>
-                            <Button color="danger" onClick={(e) => {
-
-                                //stop the dropdown and submenu from closing
-                                e.preventDefault(); 
-                                e.stopPropagation(); 
-
-                                //close modal
-                                saveDataToggle();
-
-                                // reset state
-                            }}
+                            <Button color="danger" onClick={() => {handleDanger(saveModalState)}}
                             >
                                 {dangerButton}
                             </Button>
