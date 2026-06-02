@@ -798,6 +798,7 @@ export default function ImportData() {
         submenu immediately
       */
       function initialiseSubmenu(pCat, sCat, tCat, rowIndex, event) {
+
         const rect = event.currentTarget.getBoundingClientRect();
 
         //access the latest version of the submenu state
