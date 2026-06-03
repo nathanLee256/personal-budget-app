@@ -58,9 +58,16 @@ const AuthProvider = ({ children }) => {
   const [userId, setUserId] = useState(null); // state to store user_id
   const [userData, setUserData] = useState(null);
 
-  /* budgetItems is a state object which is initialised with the user's current budget items and used to
-  populate the dropdown menu in ImportData */
-  const[budgetItems, setBudgetItems] = useState({});
+  /* 
+    budgetItems is a state object which is initialised with the user's current budget items and used to
+    populate the dropdown menu in ImportData. Here we use a callback to initialise it with either 1-the stored state obj
+    in local storage (to prevent the state from being undefined in application components when the server is temporarily down)
+    or 2- an empty obj if there is no stored obj in local storage
+  */
+  const[budgetItems, setBudgetItems] = useState(()=> {
+    const storedState = localStorage.getItem('budgetItems');
+    return storedState ? JSON.parse(storedState) : {} ;
+  });
 
   //create an instance of the navigate()
   const navigate = useNavigate();
@@ -184,6 +191,13 @@ const AuthProvider = ({ children }) => {
         console.error("Error:", error);
       });
   },[userId]); // runs once when the app mounts, then again whenever userId is assigned a value
+
+  //update local storage (with the latest data) whenever budgetItems changes
+  useEffect(()=> {
+    if (budgetItems && Object.keys(budgetItems).length > 0) {
+      localStorage.setItem('budgetItems', JSON.stringify(budgetItems));
+    }
+  }, [budgetItems])
 
   
 
