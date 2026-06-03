@@ -40,9 +40,11 @@ export default function ImportData() {
     //STATE 0- retrieve budgetItems immediately after the component renders (as soon as it is updated in AuthProvider)
       useEffect(() => {
         if (!budgetItems || Object.keys(budgetItems).length === 0) return; // ✅ Prevents running when budgetItems is empty
+
+        //check object
         console.log("Budget Items Object:", budgetItems);
-      
-      }, [budgetItems]);
+
+      }, [budgetItems]); 
 
     //END STATE 0
 
