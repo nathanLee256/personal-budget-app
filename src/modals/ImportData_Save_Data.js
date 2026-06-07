@@ -261,6 +261,16 @@ export default function SaveModal({
                             >
                                 {dangerButton}
                             </Button>
+                            {
+                                /* render a cancel button in modal 2 if user changes mind after a successfull preSubmitCheck() */
+                                returnCase(saveModalState) === 2 && (
+                                    <Button color="danger" onClick={()=> {
+                                        //close the modal when user clicks Cancel
+                                        setSaveModalState(initialState);
+                                        setLoading(false);
+                                    }}>Cancel</Button>
+                                )
+                            }
                         </ModalFooter>
 
                     )
