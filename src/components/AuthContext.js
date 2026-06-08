@@ -57,6 +57,10 @@ const AuthProvider = ({ children }) => {
   const [transactions, setTransactions] = useState([]);     //array of data objects representing the user's transactions for a selected month
   const [userId, setUserId] = useState(null); // state to store user_id
   const [userData, setUserData] = useState(null);
+  
+  //state variable and toggle function for the global logout warning modal
+  const [logoutWarning, setLogoutWarning] = useState(false);
+  const warningModalToggle = () => setLogoutWarning((prevState) =>(!prevState));
 
   /* 
     budgetItems is a state object which is initialised with the user's current budget items and used to
@@ -84,6 +88,7 @@ const AuthProvider = ({ children }) => {
         const activeExpiration = localStorage.getItem('tokenExpiration');
         const storedUserId = localStorage.getItem('userId');
         const now = new Date().getTime();
+        const warningThreshold = parseInt(activeExpiration) - 600000; //store the time that is 10 minutes before activeExpiration time
 
         console.log("Checking token validity...");
         console.log("Current Time:", now);
@@ -119,9 +124,17 @@ const AuthProvider = ({ children }) => {
             if(currentPage === "/"){
               navigate("/home", {replace: true});
             };
-            
-            
+             
         }
+        if(!logoutWarning && authenticated){
+          //calculate whether the current time ( at which the setInterval runs) is 10 minutes or < the time the jwt expries
+          if (now >= warningThreshold && now < parseInt(activeExpiration)){ 
+            //if the current time is past the 10 minute warning time, set the state to true to render the global warning module in App.js
+            setLogoutWarning(true);
+          }
+
+        }
+        
     };
 
     checkTokenValidity(); // ✅ Check once on mount
@@ -211,7 +224,9 @@ const AuthProvider = ({ children }) => {
     chooseRegister, setChooseRegister,
     transactions, setTransactions,
     budgetItems, setBudgetItems,
-    userData, setUserData
+    userData, setUserData,
+    logoutWarning, setLogoutWarning,
+    warningModalToggle
   };
 
 
