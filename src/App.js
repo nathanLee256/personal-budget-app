@@ -13,12 +13,14 @@ import TaxTool from './pages/TaxTool';
 import BudgetTool from './pages/BudgetTool';
 import GivingTool from './pages/GivingTool.js';
 import { useAuth } from './components/AuthContext.js';
+import LogoutWarning from './modals/LogoutWarning.js';
 
 
 
 function App() 
 {
   const { authenticated } = useAuth(); // or get it from props/context
+  const { logoutWarning, setLogoutWarning, warningModalToggle } = useAuth();
   
   return (
     <>
@@ -33,6 +35,12 @@ function App()
         <Route path="/giving_tool" element={<GivingTool/>}/>
         <Route path="/my_budget" element={<ImportCSV/>}/> 
       </Routes>
+      {/* conditionally render the Logout modal component */}
+      <LogoutWarning 
+        isOpen={logoutWarning}
+        setLogoutWarning={setLogoutWarning}
+        warningModalToggle={warningModalToggle}
+      />
     </>
   );
 }
