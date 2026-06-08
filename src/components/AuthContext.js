@@ -91,18 +91,17 @@ const AuthProvider = ({ children }) => {
 
         if (!activeToken || (activeExpiration && parseInt(activeExpiration) < now)) {
           /* if this block runs it means either no jwt was found or an expired one was found */
+          // in which case the user needs to be logged out by setting authenticated to false
             console.log("Token expired or missing, logging out...");
             localStorage.removeItem('token');
             localStorage.removeItem('tokenExpiration');
             localStorage.removeItem('userID');
 
-            if (authenticated) { // ✅if this block runs it means that a jwt was found but it is expired
-              // in this event the user needs to be logged out by setting authenticated to false
-                setAuthenticated(false);
-                setUserId(null);
-                window.location.reload();
-                navigate("/", {replace: true});
-            }
+            //reset global state and re-navigate to Landing page
+            setAuthenticated(false);
+            setUserId(null);
+            navigate("/", {replace: true});
+            
         } else if (!authenticated) { // ✅ Only set authenticated if it’s false
           /* If this block runs it means the user has a valid and current jwt found in local storage 
           In this event the user needs to be logged in when the app first mounts(user directed to Home page not Landing page)*/
@@ -180,7 +179,7 @@ const AuthProvider = ({ children }) => {
         /* instead of iterating over object and extracting arrays from the level-3 properties, we will remove the userId
         property then copy the object*/
 
-        if(data.IsUserData == true){ 
+        if(data.IsUserData === true){ 
           delete data.IsUserData;
           console.log("BudgetItems object:", data);
           setBudgetItems(data);
