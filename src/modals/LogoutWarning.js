@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button, Modal, ModalBody, ModalHeader,ModalFooter, Spinner} from 'reactstrap';
 
 export default function LogoutWarning({
-    logoutWarning, 
+    isOpen, 
     setLogoutWarning, 
     warningModalToggle
 }){
@@ -26,7 +26,7 @@ export default function LogoutWarning({
 
     return(
         <div>
-            <Modal isOpen={logoutWarning} toggle={warningModalToggle}>
+            <Modal isOpen={isOpen} toggle={warningModalToggle}>
                 {/* Modal Header */}
                 <ModalHeader toggle={warningModalToggle}>Warning</ModalHeader>
                 <ModalBody>
