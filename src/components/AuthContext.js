@@ -126,7 +126,8 @@ const AuthProvider = ({ children }) => {
             };
              
         }
-        if(!logoutWarning && authenticated){
+        
+        if(!logoutWarning && activeToken){
           //calculate whether the current time ( at which the setInterval runs) is 10 minutes or < the time the jwt expries
           if (now >= warningThreshold && now < parseInt(activeExpiration)){ 
             //if the current time is past the 10 minute warning time, set the state to true to render the global warning module in App.js
@@ -147,7 +148,7 @@ const AuthProvider = ({ children }) => {
         checkTokenInterval = setInterval(() => {
             console.log("Checking token at interval...");
             checkTokenValidity();
-        }, 300000); // 5-minute interval
+        }, 60000); // 1-minute interval test
     }
 
     /* and finally we define a cleanup function 
