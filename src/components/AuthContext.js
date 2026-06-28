@@ -105,37 +105,38 @@ const AuthProvider = ({ children }) => {
             //reset global state and re-navigate to Landing page
             setAuthenticated(false);
             setUserId(null);
+            setChooseLogin(false);
+            setChooseRegister(false);
             navigate("/", {replace: true});
             
-        } else if (!authenticated) { // ✅ Only set authenticated if it’s false
-          /* If this block runs it means the user has a valid and current jwt found in local storage 
-          In this event the user needs to be logged in when the app first mounts(user directed to Home page not Landing page)*/
-            console.log("Token is still valid.");
-            setAuthenticated(true);
-            setToken(activeToken);
-            if (storedUserId) {  
-              setUserId(storedUserId); // ✅ Restore userId from localStorage
+        } else { 
+            if (!authenticated) { // ✅ Only set authenticated if it’s false
+              /* If this block runs it means the user has a valid and current jwt found in local storage 
+              In this event the user needs to be logged in when the app first mounts(user directed to Home page not Landing page)*/
+                console.log("Token is still valid.");
+                setAuthenticated(true);
+                setToken(activeToken);
+                if (storedUserId) {  
+                  setUserId(storedUserId); // ✅ Restore userId from localStorage
+                }
+
+                /* and then the user needs to be either directed to Home page, or taken to the current page with the state preserved
+                (in the event of a page refresh) */
+                let currentPage = window.location.pathname;
+
+                if(currentPage === "/"){
+                  navigate("/home", {replace: true});
+                };     
             }
-
-            /* and then the user needs to be either directed to Home page, or taken to the current page with the state preserved
-            (in the event of a page refresh) */
-            let currentPage = window.location.pathname;
-
-            if(currentPage === "/"){
-              navigate("/home", {replace: true});
-            };
-             
-        }
         
-        if(!logoutWarning && activeToken){
-          //calculate whether the current time ( at which the setInterval runs) is 10 minutes or < the time the jwt expries
-          if (now >= warningThreshold && now < parseInt(activeExpiration)){ 
-            //if the current time is past the 10 minute warning time, set the state to true to render the global warning module in App.js
-            setLogoutWarning(true);
-          }
-
-        }
-        
+            if(!logoutWarning && activeToken){
+              //calculate whether the current time ( at which the setInterval runs) is 10 minutes or < the time the jwt expries
+              if (now >= warningThreshold && now < parseInt(activeExpiration)){ 
+                //if the current time is past the 10 minute warning time, set the state to true to render the global warning module in App.js
+                setLogoutWarning(true);
+              }
+            }
+        }   
     };
 
     checkTokenValidity(); // ✅ Check once on mount
@@ -148,7 +149,7 @@ const AuthProvider = ({ children }) => {
         checkTokenInterval = setInterval(() => {
             console.log("Checking token at interval...");
             checkTokenValidity();
-        }, 60000); // 1-minute interval test
+        }, 300000); // perform check every 5 mins
     }
 
     /* and finally we define a cleanup function 
