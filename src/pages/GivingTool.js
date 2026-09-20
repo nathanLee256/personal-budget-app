@@ -165,7 +165,6 @@ export default function GivingTool(){
             "Tithe",                      // not tax-deductible (typically given to a church, but not to a DGR in AU)
             "Personal Gift",             // not tax-deductible
             "Partnership Gift",          // not tax-deductible (depends on recipient’s DGR status)
-            "Charitable Donation",       // tax-deductible if given to a registered DGR
             "Missionary Support",        // not tax-deductible (unless via a registered DGR)
             "Sponsorship",               // not tax-deductible (unless structured through a DGR)
             "Memorial Gift",             // tax-deductible if given to a DGR
@@ -175,10 +174,10 @@ export default function GivingTool(){
             "Relief Aid",                // tax-deductible if through a registered relief organization (e.g., Red Cross)
             "Education Fund",            // tax-deductible only if through a DGR (e.g., scholarship funds)
             "Pledge Payment",            // follows the original gift type (deductible only if pledged to a DGR)
-            "Holiday Giving",            // not tax-deductible (typically informal or personal giving)
+            "Christmas Presents",            // not tax-deductible (typically informal or personal giving)
             "Anonymous Gift",            // follows underlying gift type
             "Community Outreach",        // tax-deductible if run by a DGR
-            "Legacy/Bequest Gift"        // tax-deductibility depends on structure and recipient; usually not claimed by donor
+            "Offering"
         ];
 
         //column identifiers (used to reference a column from the JSX)
@@ -215,7 +214,7 @@ export default function GivingTool(){
             January: {
                 giftType: "",
                 organisation: null, //will store an {organisation} object with entityName, abn, and orgId properties
-                amount: 0,
+                amount: 0.00,
                 date:"",    //e.g. "2025-06-27"
                 description: "",
                 receipt: "",   // will store the url string where the file is stored on server
@@ -223,7 +222,7 @@ export default function GivingTool(){
             February: {
                 giftType: "",
                 organisation: null, 
-                amount: 0,
+                amount: 0.00,
                 date:"",    
                 description: "",
                 receipt: "",   
@@ -231,7 +230,7 @@ export default function GivingTool(){
             March: {
                 giftType: "",
                 organisation: null, 
-                amount: 0,
+                amount: 0.00,
                 date:"",    
                 description: "",
                 receipt: "",   
@@ -239,7 +238,7 @@ export default function GivingTool(){
             April: {
                 giftType: "",
                 organisation: null, 
-                amount: 0,
+                amount: 0.00,
                 date:"",    
                 description: "",
                 receipt: "",   
@@ -247,7 +246,7 @@ export default function GivingTool(){
             May: {
                 giftType: "",
                 organisation: null, 
-                amount: 0,
+                amount: 0.00,
                 date:"",    
                 description: "",
                 receipt: "",   
@@ -255,7 +254,7 @@ export default function GivingTool(){
             June: {
                 giftType: "",
                 organisation: null, 
-                amount: 0,
+                amount: 0.00,
                 date:"",    
                 description: "",
                 receipt: "",   
@@ -263,7 +262,7 @@ export default function GivingTool(){
             July: {
                 giftType: "",
                 organisation: null, 
-                amount: 0,
+                amount: 0.00,
                 date:"",    
                 description: "",
                 receipt: "",   
@@ -271,7 +270,7 @@ export default function GivingTool(){
             August: {
                 giftType: "",
                 organisation: null, 
-                amount: 0,
+                amount: 0.00,
                 date:"",    
                 description: "",
                 receipt: "",   
@@ -279,7 +278,7 @@ export default function GivingTool(){
             September: {
                 giftType: "",
                 organisation: null, 
-                amount: 0,
+                amount: 0.00,
                 date:"",    
                 description: "",
                 receipt: "",   
@@ -287,7 +286,7 @@ export default function GivingTool(){
             October: {
                 giftType: "",
                 organisation: null, 
-                amount: 0,
+                amount: 0.00,
                 date:"",    
                 description: "",
                 receipt: "",   
@@ -295,7 +294,7 @@ export default function GivingTool(){
             November: {
                 giftType: "",
                 organisation: null, 
-                amount: 0,
+                amount: 0.00,
                 date:"",    
                 description: "",
                 receipt: "",   
@@ -303,7 +302,7 @@ export default function GivingTool(){
             December: {
                 giftType: "",
                 organisation: null, 
-                amount: 0,
+                amount: 0.00,
                 date:"",    
                 description: "",
                 receipt: "",   
@@ -1230,6 +1229,8 @@ export default function GivingTool(){
                                 <InputGroup>
                                     <InputGroupText>$</InputGroupText> {/* Prepend $ symbol */}
                                     <Input
+                                        type="number"
+                                        step="any" 
                                         value={userSelections[currentMonth].amount}
                                         onChange={(e) => handleAmountChange(e.target.value, currentMonth)}
                                         placeholder="Enter amount"
